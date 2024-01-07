@@ -11,6 +11,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@prisma/client": "^5.7.1",
     "@radix-ui/react-slot": "^1.0.2",
     "@remix-run/css-bundle": "2.4.1",
     "@remix-run/node": "2.4.1",
@@ -35,6 +36,7 @@
     "eslint-config-prettier": "^9.0.0",
     "prettier": "^3.1.1",
     "prettier-plugin-tailwindcss": "^0.5.9",
+    "prisma": "^5.7.1",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.1.6"
   },
