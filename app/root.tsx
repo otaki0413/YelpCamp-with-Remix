@@ -34,9 +34,9 @@ export default function App() {
                 <div className="flex items-center gap-x-4">
                   {[
                     { text: "ホーム", to: "/" },
-                    { text: "温泉", to: "/" },
-                    { text: "新規登録", to: "/" },
-                    { text: "ログイン", to: "/" },
+                    { text: "温泉", to: "/hotsprings" },
+                    { text: "新規登録", to: "/register" },
+                    { text: "ログイン", to: "/login" },
                   ].map((link) => (
                     <Link
                       key={link.text}

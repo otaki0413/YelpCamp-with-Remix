@@ -92,8 +92,8 @@ export default function HotSpringsIndexRoute() {
   const allHotsprings = useLoaderData<typeof loader>();
 
   return (
-    <div className="px-20 pt-8">
-      <div className="p-4 text-2xl font-bold">温泉一覧画面</div>
+    <div className="px-20 py-8">
+      <div className="p-4 text-center text-3xl font-bold">温泉一覧画面</div>
       <div className="grid w-full grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
         {allHotsprings.map(({ id, title, location, url }) => (
           <Card key={id} className="flex w-full">

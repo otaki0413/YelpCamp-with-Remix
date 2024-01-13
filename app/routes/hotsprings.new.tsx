@@ -1,3 +1,65 @@
+import { Label } from "@radix-ui/react-label";
+import { Form } from "@remix-run/react";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
+
 export default function CreateRoute() {
-  return <div className="bg-purple-200">温泉の新規登録画面</div>;
+  return (
+    <div className="mx-auto max-w-2xl px-20 py-8">
+      <div className="p-4 text-center text-3xl font-bold">温泉の新規登録</div>
+      <div>
+        <Form>
+          <div className="mb-4">
+            <Label
+              htmlFor="title"
+              className="mb-2 block text-sm font-medium text-gray-600"
+            >
+              タイトル
+            </Label>
+            <Input type="text" id="title" name="title" required />
+          </div>
+          <div className="mb-4">
+            <Label
+              htmlFor="location"
+              className="mb-2 block text-sm font-medium text-gray-600"
+            >
+              場所
+            </Label>
+            <Input type="location" id="location" name="location" required />
+          </div>
+          <div className="mb-4">
+            <Label
+              htmlFor="price"
+              className="mb-2 block text-sm font-medium text-gray-600"
+            >
+              価格
+            </Label>
+            <Input type="number" id="price" name="price" required />
+          </div>
+          <div className="mb-4">
+            <Label
+              htmlFor="description"
+              className="mb-2 block text-sm font-medium text-gray-600"
+            >
+              説明
+            </Label>
+            <Textarea id="description" name="description" required />
+          </div>
+          <div className="mb-4">
+            <Label
+              htmlFor="image"
+              className="mb-2 block text-sm font-medium text-gray-600"
+            >
+              画像
+            </Label>
+            <Input type="file" id="image" name="image" required />
+          </div>
+          <div className="mt-8">
+            <Button className="w-full">登録する</Button>
+          </div>
+        </Form>
+      </div>
+    </div>
+  );
 }
