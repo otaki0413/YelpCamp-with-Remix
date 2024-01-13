@@ -1,5 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { Link, useLoaderData } from "@remix-run/react";
+import { Button } from "~/components/ui/button";
 import {
   Card,
   CardContent,
@@ -92,8 +93,13 @@ export default function HotSpringsIndexRoute() {
   const allHotsprings = useLoaderData<typeof loader>();
 
   return (
-    <div className="px-20 py-8">
-      <div className="p-4 text-center text-3xl font-bold">温泉一覧画面</div>
+    <div className="w-full px-8 py-8 sm:px-20">
+      <div className="pb-4 text-center text-2xl font-bold">温泉リスト</div>
+      <div className="mb-4 flex justify-end">
+        <Button asChild variant="outline">
+          <Link to="new">新規登録へ</Link>
+        </Button>
+      </div>
       <div className="grid w-full grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
         {allHotsprings.map(({ id, title, location, url }) => (
           <Card key={id} className="flex w-full">
