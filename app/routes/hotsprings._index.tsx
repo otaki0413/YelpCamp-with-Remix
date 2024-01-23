@@ -102,26 +102,28 @@ export default function HotSpringsIndexRoute() {
       </div>
       <div className="grid w-full grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
         {allHotsprings.map(({ id, title, location, url }) => (
-          <Card key={id} className="flex w-full">
-            <div className="w-1/2">
-              <CardHeader>
-                <CardTitle className="line-clamp-2 break-all">
-                  {title}
-                </CardTitle>
-                <CardDescription>{location}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div>TODO:レビューのスター数</div>
-              </CardContent>
-            </div>
-            <div className="flex w-1/2 items-center justify-center p-4">
-              <img
-                src="https://source.unsplash.com/body-of-water-on-near-rocks-UHcwyq05_Gk"
-                className="h-40 w-40 rounded-sm object-cover"
-                alt="温泉の画像"
-              ></img>
-            </div>
-          </Card>
+          <Link key={id} to={`${id}`}>
+            <Card className="flex w-full">
+              <div className="w-1/2">
+                <CardHeader>
+                  <CardTitle className="line-clamp-2 break-all">
+                    {title}
+                  </CardTitle>
+                  <CardDescription>{location}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div>TODO:レビューのスター数</div>
+                </CardContent>
+              </div>
+              <div className="flex w-1/2 items-center justify-center p-4">
+                <img
+                  src="https://source.unsplash.com/body-of-water-on-near-rocks-UHcwyq05_Gk"
+                  className="h-40 w-40 rounded-sm object-cover"
+                  alt="温泉の画像"
+                ></img>
+              </div>
+            </Card>
+          </Link>
         ))}
       </div>
     </div>
