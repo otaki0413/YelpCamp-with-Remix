@@ -25,6 +25,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-textarea-autosize": "^8.5.3",
+    "remix-auth": "^3.6.0",
+    "remix-auth-form": "^1.4.0",
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7"
   },
