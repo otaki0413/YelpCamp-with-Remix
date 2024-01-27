@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
+import { Link } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import { authenticator } from "~/services/auth.server";
 
 const TEST_ITEMS = [
   {
@@ -59,7 +60,7 @@ const TEST_ITEMS = [
     url: "test.com",
   },
   {
-    id: "f",
+    id: "g",
     title: "温泉F",
     description: "素敵な温泉でした",
     price: "1200",
@@ -67,7 +68,7 @@ const TEST_ITEMS = [
     url: "test.com",
   },
   {
-    id: "f",
+    id: "h",
     title: "温泉Faaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     description: "素敵な温泉でした",
     price: "1200",
@@ -75,7 +76,7 @@ const TEST_ITEMS = [
     url: "test.com",
   },
   {
-    id: "f",
+    id: "i",
     title: "温泉F",
     description: "素敵な温泉でした",
     price: "1200",
@@ -85,12 +86,13 @@ const TEST_ITEMS = [
 ];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const allItems = TEST_ITEMS;
-  return allItems;
+  return await authenticator.isAuthenticated(request, {
+    failureRedirect: "/login",
+  });
 };
 
 export default function HotSpringsIndexRoute() {
-  const allHotsprings = useLoaderData<typeof loader>();
+  const allHotsprings = TEST_ITEMS;
 
   return (
     <div className="w-full px-8 py-8 sm:px-20">
