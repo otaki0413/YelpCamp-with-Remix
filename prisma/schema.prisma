@@ -39,7 +39,6 @@ model User {
   id        String      @id @default(uuid())
   email     String      @unique
   username  String
-  salt      String
   hash      String
   HotSpring HotSpring[]
 }
