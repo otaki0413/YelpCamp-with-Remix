@@ -1,13 +1,21 @@
-import { Label } from "@radix-ui/react-label";
-import { Form } from "@remix-run/react";
+import type { LoaderFunctionArgs } from "@remix-run/node";
+import { Form, Link } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
+import { authenticator } from "~/services/auth.server";
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  return await authenticator.isAuthenticated(request, {
+    failureRedirect: "/login",
+  });
+};
 
 export default function CreateRoute() {
   return (
-    <div className="mx-auto max-w-2xl px-20 py-8">
-      <div className="p-4 text-center text-3xl font-bold">温泉の新規登録</div>
+    <div className="mx-auto w-full max-w-2xl px-8 py-8 sm:px-20">
+      <div className="pb-4 text-center text-2xl font-bold">温泉の新規登録</div>
       <div>
         <Form>
           <div className="mb-4">
@@ -59,6 +67,13 @@ export default function CreateRoute() {
             <Button className="w-full">登録する</Button>
           </div>
         </Form>
+      </div>
+      <div className="mt-8">
+        <Button variant="link" asChild>
+          <Link to="/hotsprings" className="pl-0 text-blue-500">
+            戻る
+          </Link>
+        </Button>
       </div>
     </div>
   );
