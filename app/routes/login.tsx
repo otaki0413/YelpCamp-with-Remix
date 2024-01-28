@@ -3,10 +3,10 @@ import { Form } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { authenticator } from "~/services/auth.server";
+import { AUTH_STRATEGY_NAME, authenticator } from "~/services/auth.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  return await authenticator.authenticate("form", request, {
+  return await authenticator.authenticate(AUTH_STRATEGY_NAME, request, {
     successRedirect: "/hotsprings",
     failureRedirect: "/login",
   });
@@ -23,7 +23,7 @@ export default function Login() {
     <div className="flex min-h-full items-center justify-center py-40">
       <div className="w-full rounded border p-8 shadow-md sm:mx-auto sm:max-w-md">
         <h2 className="mb-8 text-center text-2xl font-semibold">ログイン</h2>
-        <Form method="post">
+        <Form method="POST">
           <div className="mb-4">
             <Label
               htmlFor="email"
