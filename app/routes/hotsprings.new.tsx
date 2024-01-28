@@ -1,8 +1,16 @@
+import type { LoaderFunctionArgs } from "@remix-run/node";
 import { Form, Link } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
+import { authenticator } from "~/services/auth.server";
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  return await authenticator.isAuthenticated(request, {
+    failureRedirect: "/login",
+  });
+};
 
 export default function CreateRoute() {
   return (

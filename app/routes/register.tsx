@@ -1,4 +1,4 @@
-import type { ActionFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Form, json, useActionData } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -32,6 +32,12 @@ export async function action({ request }: ActionFunctionArgs) {
     failureRedirect: "/login",
   });
 }
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  return await authenticator.isAuthenticated(request, {
+    successRedirect: "/hotsprings",
+  });
+};
 
 export default function Register() {
   const actionData = useActionData<typeof action>();

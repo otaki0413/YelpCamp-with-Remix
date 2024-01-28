@@ -1,9 +1,12 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
+import { authenticator } from "~/services/auth.server";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
+  await authenticator.isAuthenticated(request, {
+    failureRedirect: "/login",
+  });
   const id = params.id;
-  console.log(id);
   return id;
 };
 

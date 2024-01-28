@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import { authenticator } from "~/services/auth.server";
 
 const TEST_ITEMS = [
   {
@@ -84,9 +85,11 @@ const TEST_ITEMS = [
 ];
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
+  await authenticator.isAuthenticated(request, {
+    failureRedirect: "/login",
+  });
   const id = params.id;
   const hostpring = TEST_ITEMS.find((value) => value.id === id);
-  console.log(hostpring);
   return hostpring;
 };
 
