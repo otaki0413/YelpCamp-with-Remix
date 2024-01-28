@@ -5,8 +5,8 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "~/components/ui/card";
+import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
 import { authenticator } from "~/services/auth.server";
 
 const TEST_ITEMS = [
@@ -59,7 +59,7 @@ const TEST_ITEMS = [
     url: "test.com",
   },
   {
-    id: "f",
+    id: "g",
     title: "温泉F",
     description: "素敵な温泉でした",
     price: "1200",
@@ -67,7 +67,7 @@ const TEST_ITEMS = [
     url: "test.com",
   },
   {
-    id: "f",
+    id: "h",
     title: "温泉Faaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     description: "素敵な温泉でした",
     price: "1200",
@@ -75,12 +75,27 @@ const TEST_ITEMS = [
     url: "test.com",
   },
   {
-    id: "f",
+    id: "i",
     title: "温泉F",
     description: "素敵な温泉でした",
     price: "1200",
     location: "石川県七尾市",
     url: "test.com",
+  },
+];
+
+export const IMAGES = [
+  {
+    id: 1,
+    src: "https://source.unsplash.com/body-of-water-on-near-rocks-UHcwyq05_Gk",
+  },
+  {
+    id: 2,
+    src: "https://source.unsplash.com/body-of-water-on-near-rocks-UHcwyq05_Gk",
+  },
+  {
+    id: 3,
+    src: "https://source.unsplash.com/body-of-water-on-near-rocks-UHcwyq05_Gk",
   },
 ];
 
@@ -99,16 +114,21 @@ export default function HotSpringRoute() {
     <div className="w-full p-8">
       <div className="mx-auto flex w-[1000px] flex-col sm:flex-row">
         <Card>
+          <ScrollArea>
+            <div className="flex gap-x-4 px-4">
+              {IMAGES.map((image) => {
+                return <img key={image.id} src={image.src} alt="温泉画像" />;
+              })}
+            </div>
+            <ScrollBar orientation="horizontal" className="h-0" />
+          </ScrollArea>
           <CardHeader>
-            <CardTitle>{hotspring.title}</CardTitle>
-            <CardDescription></CardDescription>
+            <div className="text-3xl font-bold">{hotspring.title}</div>
+            <CardDescription>群馬県</CardDescription>
           </CardHeader>
           <CardContent>
             <div>
-              Lorem ipsum dolor sit amet consectetur adipisicing elit.
-              Consequatur, molestias dolore voluptatum eaque possimus quas fugit
-              quasi a dicta illum accusantium atque itaque id voluptatem
-              nesciunt nam, cum officiis. Deleniti.
+              草津温泉は、日本の群馬県に位置する歴史ある温泉地で、標高1,200メートルに広がります。その源泉は日本一の湧出量を誇り、湯畑と呼ばれる地域では温泉が地表に湧き出ている光景が見られます。硫黄泉で知られ、美肌やリラックス効果が期待できることから、多くの観光客が訪れます。四季折々の風景や歴史的な建造物も魅力で、観光と温泉療法を楽しむことができます。
             </div>
           </CardContent>
         </Card>
