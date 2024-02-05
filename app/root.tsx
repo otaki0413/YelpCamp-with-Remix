@@ -13,9 +13,13 @@ import {
   redirect,
   useLoaderData,
 } from "@remix-run/react";
-import styles from "./tailwind.css";
+import cssStyles from "@smastrom/react-rating/style.css";
+import tailwindStyles from "./tailwind.css";
 
-export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: tailwindStyles },
+  { rel: "stylesheet", href: cssStyles },
+];
 
 // TODO: rootにloaderを置くかどうかは要検討
 export const loader = async ({ request }: LoaderFunctionArgs) => {
