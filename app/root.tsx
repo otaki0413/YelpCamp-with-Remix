@@ -10,9 +10,13 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  redirect,
   useLoaderData,
+  json,
 } from "@remix-run/react";
+import { useEffect } from "react";
+import { getToast } from "remix-toast";
+import { toast as notify } from "sonner";
+import { Toaster } from "~/components/ui/sonner";
 import cssStyles from "@smastrom/react-rating/style.css";
 import tailwindStyles from "./tailwind.css";
 
@@ -21,28 +25,30 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: cssStyles },
 ];
 
-// TODO: rootにloaderを置くかどうかは要検討
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const session = request.headers.get("Cookie");
-  if (session && new URL(request.url).pathname === "/") {
-    throw redirect("/hotsprings");
-  }
-  return session;
+  const { toast, headers } = await getToast(request);
+  return json({ toast }, { headers });
 };
 
 export default function App() {
-  const session = useLoaderData<typeof loader>();
-  const links = session
-    ? [
-        { text: "ホーム", to: "/" },
-        { text: "温泉", to: "/hotsprings" },
-      ]
-    : [
-        { text: "ホーム", to: "/" },
-        { text: "温泉", to: "/hotsprings" },
-        { text: "新規登録", to: "/register" },
-        { text: "ログイン", to: "/login" },
-      ];
+  const { toast } = useLoaderData<typeof loader>();
+
+  useEffect(() => {
+    if (toast?.type === "error") {
+      notify.error(toast.message);
+    }
+    if (toast?.type === "success") {
+      notify.success(toast.message);
+    }
+  }, [toast]);
+
+  // TODO: session有無に応じて、要素を切り替える
+  const links = [
+    { text: "ホーム", to: "/" },
+    { text: "温泉", to: "/hotsprings" },
+    { text: "新規登録", to: "/register" },
+    { text: "ログイン", to: "/login" },
+  ];
 
   return (
     <Document>
@@ -65,14 +71,12 @@ export default function App() {
                     {link.text}
                   </Link>
                 ))}
-                {/* セッションが存在する場合、ログアウトボタン表示 */}
-                {session ? (
-                  <Form action="/logout" method="post">
-                    <button className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white">
-                      ログアウト
-                    </button>
-                  </Form>
-                ) : null}
+                {/* TODO:セッションが存在する場合、ログアウトボタン表示 */}
+                <Form action="/logout" method="post">
+                  <button className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white">
+                    ログアウト
+                  </button>
+                </Form>
               </div>
             </div>
           </nav>
@@ -146,6 +150,7 @@ function Document({
       </head>
       <body>
         {children}
+        <Toaster position="top-center" />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
