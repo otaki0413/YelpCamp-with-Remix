@@ -16,8 +16,8 @@ model HotSpring {
   description String
   price       Int
   location    String
-  url         String
-  filename    String
+  url         String?
+  filename    String?
   Author      User     @relation(fields: [authorId], references: [id])
   authorId    String
   reviews     Review[]
