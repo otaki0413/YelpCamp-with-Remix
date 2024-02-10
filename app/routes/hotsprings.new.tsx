@@ -1,5 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Form, Link, json, redirect, useActionData } from "@remix-run/react";
+import { Form, Link, json, useActionData } from "@remix-run/react";
+import { redirectWithSuccess } from "remix-toast";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -9,7 +10,6 @@ import {
   createHotSpring,
 } from "~/models/hotspring.server";
 import { authenticator } from "~/services/auth.server";
-import { commitSession, getSession } from "~/services/session.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   return await authenticator.isAuthenticated(request, {
@@ -36,16 +36,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     authorId: user.id,
   });
 
-  const session = await getSession(request.headers.get("Cookie"));
-  session.flash("message", `${newHotSpring.title}を新規登録しました。`);
-
-  return redirect("/", {
-    headers: {
-      "Set-Cookie": await commitSession(session),
-    },
-  });
-
-  // return redirect(`/hotsprings/${newHotSpring}`);
+  // TODO: 第3引数にいれるべきかが分からないため調査する
+  return redirectWithSuccess("/", `${newHotSpring.title}を登録しました。`);
 };
 
 export default function CreateRoute() {
