@@ -4,19 +4,26 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 async function seed() {
-  const email = "test@test.com";
-
   // cleanup the existing database
-  await prisma.user.delete({ where: { email } });
+  await prisma.review.deleteMany();
+  await prisma.hotSpring.deleteMany();
+  await prisma.user.deleteMany();
 
-  const username = "testUser";
   const hashedPassword = await bcrypt.hash("password", 10);
 
   // Create users
-  const user = await prisma.user.create({
+  const user1 = await prisma.user.create({
     data: {
-      email,
-      username,
+      email: "user1@test.com",
+      username: "user1",
+      hash: hashedPassword,
+    },
+  });
+
+  const user2 = await prisma.user.create({
+    data: {
+      email: "user2@test.com",
+      username: "user2",
       hash: hashedPassword,
     },
   });
@@ -28,7 +35,7 @@ async function seed() {
       description: "A serene hot spring for ultimate relaxation.",
       price: 50,
       location: "Mountain Valley",
-      authorId: user.id,
+      authorId: user1.id,
     },
   });
 
@@ -38,7 +45,7 @@ async function seed() {
       description: "An adventurous hot spring for thrill-seekers.",
       price: 70,
       location: "Jungle Oasis",
-      authorId: user.id,
+      authorId: user1.id,
     },
   });
 
@@ -48,7 +55,7 @@ async function seed() {
       description: "A peaceful hot spring with calming waters.",
       price: 60,
       location: "Lakeside Retreat",
-      authorId: user.id,
+      authorId: user2.id,
     },
   });
 
