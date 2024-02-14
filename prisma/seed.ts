@@ -66,16 +66,19 @@ async function seed() {
         body: "Amazing experience! Highly recommended.",
         rating: 5,
         hotSpringId: hotSpring1.id,
+        reviewerId: user1.id,
       },
       {
         body: "Great place for an adventure!",
         rating: 4,
         hotSpringId: hotSpring2.id,
+        reviewerId: user2.id,
       },
       {
         body: "Peaceful and relaxing atmosphere.",
         rating: 5,
         hotSpringId: hotSpring3.id,
+        reviewerId: user2.id,
       },
     ],
   });

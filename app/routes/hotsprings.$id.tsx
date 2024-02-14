@@ -1,5 +1,11 @@
-import type { LoaderFunctionArgs } from "@remix-run/node";
-import { Form, Link, json, useLoaderData } from "@remix-run/react";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import {
+  Form,
+  Link,
+  json,
+  useActionData,
+  useLoaderData,
+} from "@remix-run/react";
 import { useState } from "react";
 import { Rating } from "@smastrom/react-rating";
 import invariant from "tiny-invariant";
@@ -19,7 +25,12 @@ import { Textarea } from "~/components/ui/textarea";
 import { authenticator } from "~/services/auth.server";
 import { getHotSpring } from "~/models/hotspring.server";
 import { getUserById } from "~/models/user.server";
-import { getReviewsByHotSpringId } from "~/models/review.server";
+import {
+  CreateReviewSchema,
+  createReview,
+  getReviewsByHotSpringId,
+} from "~/models/review.server";
+import { jsonWithSuccess } from "remix-toast";
 
 export const IMAGES = [
   {
@@ -58,9 +69,37 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   return json({ hotSpring, user, reviews });
 };
 
+export const action = async ({ request }: ActionFunctionArgs) => {
+  // MEMO: レーティングの値をフォームデータとして取得したい
+  const formDataObj = Object.fromEntries(await request.formData());
+
+  const validationResult = CreateReviewSchema.safeParse(formDataObj);
+  if (!validationResult.success) {
+    console.log(validationResult.error.flatten());
+    return json({
+      validationErrors: validationResult.error.flatten().fieldErrors,
+    });
+  }
+
+  const user = await authenticator.isAuthenticated(request, {
+    failureRedirect: "/login",
+  });
+
+  await createReview({
+    userId: user.id,
+    rating: validationResult.data.rating,
+    comment: validationResult.data.comment,
+  });
+
+  // TODO: リダイレクトせずにトースターを表示させる
+  return jsonWithSuccess(null, "Operation successful! 🎉");
+};
+
 export default function HotSpringRoute() {
   const [rating, setRating] = useState(0);
   const { hotSpring, user, reviews } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
+  const validationMessages = actionData?.validationErrors;
 
   return (
     <div className="w-full p-4">
@@ -126,19 +165,29 @@ export default function HotSpringRoute() {
             </div>
             {/* レビュー投稿用フォーム */}
             <div className="pb-8">
-              <Form className="space-y-2">
+              <Form method="POST" className="space-y-2">
                 <Rating
                   style={{ maxWidth: 180 }}
                   value={rating}
                   onChange={setRating}
                   isRequired
                 />
+                {validationMessages?.rating && (
+                  <p className="text-sm font-bold text-red-500">
+                    {validationMessages?.rating[0]}
+                  </p>
+                )}
                 <Textarea
                   id="comment"
                   name="comment"
                   required
                   className="border border-gray-300"
                 />
+                {validationMessages?.comment && (
+                  <p className="text-sm font-bold text-red-500">
+                    {validationMessages.comment[0]}
+                  </p>
+                )}
                 <div className="flex justify-end">
                   <Button>投稿する</Button>
                 </div>
