@@ -31,6 +31,8 @@ model Review {
   rating      Int
   HotSpring   HotSpring? @relation(fields: [hotSpringId], references: [id])
   hotSpringId String?
+  Reviewer    User       @relation(fields: [reviewerId], references: [id])
+  reviewerId  String
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }
@@ -41,4 +43,5 @@ model User {
   username  String
   hash      String
   HotSpring HotSpring[]
+  Review    Review[]
 }
