@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import { Link } from "@remix-run/react";
+import { Link, json, useLoaderData } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -8,91 +8,19 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import { getHotSprings } from "~/models/hotspring.server";
 import { authenticator } from "~/services/auth.server";
 
-const TEST_ITEMS = [
-  {
-    id: "a",
-    title: "温泉A",
-    description: "素敵な温泉でした",
-    price: "500",
-    location: "石川県金沢市",
-    url: "test.com",
-  },
-  {
-    id: "b",
-    title: "温泉B",
-    description: "素敵な温泉でした",
-    price: "1000",
-    location: "石川県野々市市",
-    url: "test.com",
-  },
-  {
-    id: "c",
-    title: "めっちゃキレイな温泉",
-    description: "素敵な温泉でした",
-    price: "1200",
-    location: "石川県七尾市",
-    url: "https://source.unsplash.com/body-of-water-on-near-rocks-UHcwyq05_Gk",
-  },
-  {
-    id: "d",
-    title: "温泉Dたのしい楽しい楽しい楽しい楽しい楽しい楽しい楽しい楽しい",
-    description: "素敵な温泉でした",
-    price: "1200",
-    location: "石川県七尾市",
-    url: "test.com",
-  },
-  {
-    id: "e",
-    title: "草津温泉",
-    description: "素敵な温泉でした",
-    price: "1200",
-    location: "石川県七尾市",
-    url: "test.com",
-  },
-  {
-    id: "f",
-    title: "温泉F",
-    description: "素敵な温泉でした",
-    price: "1200",
-    location: "石川県七尾市",
-    url: "test.com",
-  },
-  {
-    id: "g",
-    title: "温泉F",
-    description: "素敵な温泉でした",
-    price: "1200",
-    location: "石川県七尾市",
-    url: "test.com",
-  },
-  {
-    id: "h",
-    title: "温泉Faaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    description: "素敵な温泉でした",
-    price: "1200",
-    location: "石川県七尾市",
-    url: "test.com",
-  },
-  {
-    id: "i",
-    title: "温泉F",
-    description: "素敵な温泉でした",
-    price: "1200",
-    location: "石川県七尾市",
-    url: "test.com",
-  },
-];
-
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  return await authenticator.isAuthenticated(request, {
+  await authenticator.isAuthenticated(request, {
     failureRedirect: "/login",
   });
+  const hotSprings = await getHotSprings();
+  return json({ hotSprings });
 };
 
 export default function HotSpringsIndexRoute() {
-  const allHotsprings = TEST_ITEMS;
+  const { hotSprings } = useLoaderData<typeof loader>();
 
   return (
     <div className="w-full px-8 py-8 sm:px-20">
@@ -103,7 +31,7 @@ export default function HotSpringsIndexRoute() {
         </Button>
       </div>
       <div className="grid w-full grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
-        {allHotsprings.map(({ id, title, location, url }) => (
+        {hotSprings.map(({ id, title, location }) => (
           <Link key={id} to={`${id}`}>
             <Card className="flex w-full">
               <div className="w-1/2">

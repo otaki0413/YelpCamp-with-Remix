@@ -1,9 +1,14 @@
+import type { User } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import z from "zod";
-
 import { prisma } from "~/db.server";
+
 const SALT_ROUNDS = 10;
+
+export async function getUserById(id: User["id"]) {
+  return await prisma.user.findUnique({ where: { id } });
+}
 
 export const CreateUserSchema = z.object({
   username: z

@@ -1,57 +1,26 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Form, Link, useLoaderData } from "@remix-run/react";
+import { Form, Link, json, useLoaderData } from "@remix-run/react";
+import invariant from "tiny-invariant";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
+import { getHotSpring } from "~/models/hotspring.server";
 import { authenticator } from "~/services/auth.server";
-
-const TEST_ITEMS = [
-  {
-    id: "a",
-    title: "草津温泉",
-    description:
-      "草津温泉は、日本の群馬県に位置する歴史ある温泉地で、標高1,200メートルに広がります。その源泉は日本一の湧出量を誇り、湯畑と呼ばれる地域では温泉が地表に湧き出ている光景が見られます。硫黄泉で知られ、美肌やリラックス効果が期待できることから、多くの観光客が訪れます。四季折々の風景や歴史的な建造物も魅力で、観光と温泉療法を楽しむことができます。",
-    price: "13990",
-    location: "群馬県吾妻郡草津町草津",
-    url: "test.com",
-  },
-  {
-    id: "b",
-    title: "草津温泉",
-    description:
-      "草津温泉は、日本の群馬県に位置する歴史ある温泉地で、標高1,200メートルに広がります。その源泉は日本一の湧出量を誇り、湯畑と呼ばれる地域では温泉が地表に湧き出ている光景が見られます。硫黄泉で知られ、美肌やリラックス効果が期待できることから、多くの観光客が訪れます。四季折々の風景や歴史的な建造物も魅力で、観光と温泉療法を楽しむことができます。",
-    price: "13990",
-    location: "群馬県吾妻郡草津町草津",
-    url: "test.com",
-  },
-  {
-    id: "c",
-    title: "草津温泉",
-    description:
-      "草津温泉は、日本の群馬県に位置する歴史ある温泉地で、標高1,200メートルに広がります。その源泉は日本一の湧出量を誇り、湯畑と呼ばれる地域では温泉が地表に湧き出ている光景が見られます。硫黄泉で知られ、美肌やリラックス効果が期待できることから、多くの観光客が訪れます。四季折々の風景や歴史的な建造物も魅力で、観光と温泉療法を楽しむことができます。",
-    price: "13990",
-    location: "群馬県吾妻郡草津町草津",
-    url: "test.com",
-  },
-  {
-    id: "d",
-    title: "草津温泉",
-    description:
-      "草津温泉は、日本の群馬県に位置する歴史ある温泉地で、標高1,200メートルに広がります。その源泉は日本一の湧出量を誇り、湯畑と呼ばれる地域では温泉が地表に湧き出ている光景が見られます。硫黄泉で知られ、美肌やリラックス効果が期待できることから、多くの観光客が訪れます。四季折々の風景や歴史的な建造物も魅力で、観光と温泉療法を楽しむことができます。",
-    price: "13990",
-    location: "群馬県吾妻郡草津町草津",
-    url: "test.com",
-  },
-];
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   await authenticator.isAuthenticated(request, {
     failureRedirect: "/login",
   });
-  const id = params.id;
-  const hostpring = TEST_ITEMS.find((value) => value.id === id);
-  return hostpring;
+  const hotSpringId = params.id;
+  invariant(hotSpringId, "Invalid params");
+
+  const hotSpring = await getHotSpring(hotSpringId);
+  if (!hotSpring) {
+    throw new Response("Not Found", { status: 404 });
+  }
+
+  return json({ hotSpring });
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -59,8 +28,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function EditRoute() {
-  const { id, title, location, price, description } =
-    useLoaderData<typeof loader>();
+  const { hotSpring } = useLoaderData<typeof loader>();
 
   return (
     <div className="mx-auto w-full max-w-2xl px-8 py-8 sm:px-20">
@@ -74,7 +42,13 @@ export default function EditRoute() {
             >
               タイトル
             </Label>
-            <Input type="text" id="title" name="title" value={title} required />
+            <Input
+              type="text"
+              id="title"
+              name="title"
+              value={hotSpring.title}
+              required
+            />
           </div>
           <div className="mb-4">
             <Label
@@ -87,7 +61,7 @@ export default function EditRoute() {
               type="location"
               id="location"
               name="location"
-              value={location}
+              value={hotSpring.location}
               required
             />
           </div>
@@ -102,7 +76,7 @@ export default function EditRoute() {
               type="number"
               id="price"
               name="price"
-              value={price}
+              value={hotSpring.price}
               required
             />
           </div>
@@ -116,7 +90,7 @@ export default function EditRoute() {
             <Textarea
               id="description"
               name="description"
-              value={description}
+              value={hotSpring.description}
               required
             />
           </div>
@@ -136,7 +110,10 @@ export default function EditRoute() {
       </div>
       <div className="mt-8">
         <Button variant="link" asChild>
-          <Link to={`/hotsprings/${id}`} className="pl-0 text-blue-500">
+          <Link
+            to={`/hotsprings/${hotSpring.id}`}
+            className="pl-0 text-blue-500"
+          >
             戻る
           </Link>
         </Button>
