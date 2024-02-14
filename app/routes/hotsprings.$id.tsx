@@ -19,6 +19,7 @@ import { Textarea } from "~/components/ui/textarea";
 import { authenticator } from "~/services/auth.server";
 import { getHotSpring } from "~/models/hotspring.server";
 import { getUserById } from "~/models/user.server";
+import { getReviewsByHotSpringId } from "~/models/review.server";
 
 export const IMAGES = [
   {
@@ -52,12 +53,14 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     throw new Response("Not Found User", { status: 404 });
   }
 
-  return json({ hotSpring, user });
+  const reviews = await getReviewsByHotSpringId(hotSpring.id);
+
+  return json({ hotSpring, user, reviews });
 };
 
 export default function HotSpringRoute() {
   const [rating, setRating] = useState(0);
-  const { hotSpring, user } = useLoaderData<typeof loader>();
+  const { hotSpring, user, reviews } = useLoaderData<typeof loader>();
 
   return (
     <div className="w-full p-4">
@@ -144,17 +147,19 @@ export default function HotSpringRoute() {
             {/* レビュー表示エリア */}
             <ScrollArea className="h-[600px]">
               <div className="space-y-2">
-                {[1, 2, 3, 4, 5, 6].map((num) => {
+                {reviews.map((review) => {
                   return (
                     <div
-                      key={num}
+                      key={review.id}
                       className="rounded-md border border-gray-300 p-2 shadow-none"
                     >
-                      <div className="">テスト{num}さん</div>
-                      <Rating style={{ maxWidth: 100 }} value={3} readOnly />
-                      <p className="line-clamp-2 break-all">
-                        とてもいい温泉でした。また行ってみたいです！とてもいい温泉でした。また行ってみたいです！とてもいい温泉でした。また行ってみたいです！
-                      </p>
+                      <div className="">TODO: レビュー者の名前を表示</div>
+                      <Rating
+                        style={{ maxWidth: 100 }}
+                        value={review.rating}
+                        readOnly
+                      />
+                      <p className="line-clamp-2 break-all">{review.body}</p>
                     </div>
                   );
                 })}
