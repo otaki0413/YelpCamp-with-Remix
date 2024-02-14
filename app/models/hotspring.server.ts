@@ -1,5 +1,19 @@
+import type { HotSpring } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "~/db.server";
+
+export async function getHotSpring(id: HotSpring["id"]) {
+  return await prisma.hotSpring.findUnique({
+    where: { id },
+  });
+}
+
+export async function getHotSprings() {
+  return await prisma.hotSpring.findMany({
+    select: { id: true, title: true, location: true, url: true },
+    orderBy: { updatedAt: "desc" },
+  });
+}
 
 export const CreateHotSpringSchema = z.object({
   title: z.string(),
