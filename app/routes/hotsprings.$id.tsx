@@ -6,7 +6,7 @@ import {
   useActionData,
   useLoaderData,
 } from "@remix-run/react";
-import { useState } from "react";
+import { jsonWithSuccess } from "remix-toast";
 import { Rating } from "@smastrom/react-rating";
 import invariant from "tiny-invariant";
 import { format } from "date-fns";
@@ -30,7 +30,7 @@ import {
   createReview,
   getReviewsByHotSpringId,
 } from "~/models/review.server";
-import { jsonWithSuccess } from "remix-toast";
+import { RatingGroup } from "~/components/Rating";
 
 export const IMAGES = [
   {
@@ -69,8 +69,10 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   return json({ hotSpring, user, reviews });
 };
 
-export const action = async ({ request }: ActionFunctionArgs) => {
-  // MEMO: レーティングの値をフォームデータとして取得したい
+export const action = async ({ request, params }: ActionFunctionArgs) => {
+  const hotSpringId = params.id;
+  invariant(hotSpringId, "Invalid params");
+
   const formDataObj = Object.fromEntries(await request.formData());
 
   const validationResult = CreateReviewSchema.safeParse(formDataObj);
@@ -86,17 +88,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   });
 
   await createReview({
-    userId: user.id,
+    reviewerId: user.id,
     rating: validationResult.data.rating,
     comment: validationResult.data.comment,
+    hotSpringId,
   });
 
-  // TODO: リダイレクトせずにトースターを表示させる
-  return jsonWithSuccess(null, "Operation successful! 🎉");
+  return jsonWithSuccess(null, "レビューが投稿されました！🎉");
 };
 
 export default function HotSpringRoute() {
-  const [rating, setRating] = useState(0);
   const { hotSpring, user, reviews } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const validationMessages = actionData?.validationErrors;
@@ -166,12 +167,7 @@ export default function HotSpringRoute() {
             {/* レビュー投稿用フォーム */}
             <div className="pb-8">
               <Form method="POST" className="space-y-2">
-                <Rating
-                  style={{ maxWidth: 180 }}
-                  value={rating}
-                  onChange={setRating}
-                  isRequired
-                />
+                <RatingGroup />
                 {validationMessages?.rating && (
                   <p className="text-sm font-bold text-red-500">
                     {validationMessages?.rating[0]}
@@ -202,7 +198,9 @@ export default function HotSpringRoute() {
                       key={review.id}
                       className="rounded-md border border-gray-300 p-2 shadow-none"
                     >
-                      <div className="">TODO: レビュー者の名前を表示</div>
+                      <div className="font-bold">
+                        {review.Reviewer.username}
+                      </div>
                       <Rating
                         style={{ maxWidth: 100 }}
                         value={review.rating}
