@@ -6,6 +6,7 @@ import {
   useActionData,
   useLoaderData,
 } from "@remix-run/react";
+import { jsonWithSuccess } from "remix-toast";
 import { Rating } from "@smastrom/react-rating";
 import invariant from "tiny-invariant";
 import { format } from "date-fns";
@@ -30,7 +31,6 @@ import {
   getReviewsByHotSpringId,
 } from "~/models/review.server";
 import { RatingGroup } from "~/components/Rating";
-// import { jsonWithSuccess } from "remix-toast";
 
 export const IMAGES = [
   {
@@ -94,9 +94,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     hotSpringId,
   });
 
-  return null;
-  // TODO: リダイレクトせずにトースターを表示させる
-  // return jsonWithSuccess(null, "Operation successful! 🎉");
+  return jsonWithSuccess(null, "コメントが投稿されました！👍");
 };
 
 export default function HotSpringRoute() {
