@@ -22,20 +22,21 @@ export const CreateReviewSchema = z.object({
 });
 
 export async function createReview({
-  userId,
+  reviewerId,
   rating,
   comment,
-}: z.infer<typeof CreateReviewSchema> & { userId: string }) {
+  hotSpringId,
+}: z.infer<typeof CreateReviewSchema> & {
+  reviewerId: string;
+  hotSpringId: string;
+}) {
   try {
     await prisma.review.create({
       data: {
         rating,
         body: comment,
-        Reviewer: {
-          connect: {
-            id: userId,
-          },
-        },
+        reviewerId,
+        hotSpringId,
       },
     });
   } catch (error) {
