@@ -202,7 +202,9 @@ export default function HotSpringRoute() {
                       key={review.id}
                       className="rounded-md border border-gray-300 p-2 shadow-none"
                     >
-                      <div className="">TODO: レビュー者の名前を表示</div>
+                      <div className="font-bold">
+                        {review.Reviewer.username}
+                      </div>
                       <Rating
                         style={{ maxWidth: 100 }}
                         value={review.rating}
