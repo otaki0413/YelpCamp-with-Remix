@@ -94,7 +94,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     hotSpringId,
   });
 
-  return jsonWithSuccess(null, "コメントが投稿されました！👍");
+  return jsonWithSuccess(null, "レビューが投稿されました！🎉");
 };
 
 export default function HotSpringRoute() {

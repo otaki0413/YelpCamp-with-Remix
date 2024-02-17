@@ -17,8 +17,14 @@ export async function getReviewsByHotSpringId(id: HotSpring["id"]) {
 }
 
 export const CreateReviewSchema = z.object({
-  rating: z.coerce.number().min(1).max(5),
-  comment: z.string().min(1, { message: "1文字以上で入力してください。" }),
+  rating: z.coerce
+    .number()
+    .min(1, "1以上のレビューをつけてください。")
+    .max(5, "5以上のレビューはつけられません。")
+    .default(0),
+  comment: z
+    .string()
+    .min(5, { message: "コメントは5文字以上で入力して下さい。" }),
 });
 
 export async function createReview({
