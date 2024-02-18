@@ -5,6 +5,9 @@ import { prisma } from "~/db.server";
 export async function getHotSpring(id: HotSpring["id"]) {
   return await prisma.hotSpring.findUnique({
     where: { id },
+    include: {
+      Author: true,
+    },
   });
 }
 

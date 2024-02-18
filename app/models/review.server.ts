@@ -1,4 +1,4 @@
-import type { HotSpring } from "@prisma/client";
+import type { HotSpring, Review } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "~/db.server";
 
@@ -44,6 +44,17 @@ export async function createReview({
         reviewerId,
         hotSpringId,
       },
+    });
+  } catch (error) {
+    console.log(error);
+    throw new Error("Unexpected error");
+  }
+}
+
+export async function deleteReview(id: Review["id"]) {
+  try {
+    return prisma.review.delete({
+      where: { id },
     });
   } catch (error) {
     console.log(error);
