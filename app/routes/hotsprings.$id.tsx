@@ -1,4 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import type { Params } from "@remix-run/react";
 import {
   Form,
   Link,
@@ -10,6 +11,7 @@ import { jsonWithSuccess } from "remix-toast";
 import { Rating } from "@smastrom/react-rating";
 import invariant from "tiny-invariant";
 import { format } from "date-fns";
+import { Trash2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -24,10 +26,10 @@ import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
 import { authenticator } from "~/services/auth.server";
 import { getHotSpring } from "~/models/hotspring.server";
-import { getUserById } from "~/models/user.server";
 import {
   CreateReviewSchema,
   createReview,
+  deleteReview,
   getReviewsByHotSpringId,
 } from "~/models/review.server";
 import { RatingGroup } from "~/components/Rating";
@@ -47,8 +49,15 @@ export const IMAGES = [
   },
 ];
 
+const INTENTS = {
+  createReviewIntent: "createReview" as const,
+  deleteReviewIntent: "deleteReview" as const,
+  deleteHotSpringIntent: "createHotSpring" as const,
+};
+
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  await authenticator.isAuthenticated(request, {
+  // TODO: 認証せずとも閲覧はできるようにしたい
+  const currentUser = await authenticator.isAuthenticated(request, {
     failureRedirect: "/login",
   });
   const hotSpringId = params.id;
@@ -59,46 +68,32 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     throw new Response("Not Found HotSpring", { status: 404 });
   }
 
-  const user = await getUserById(hotSpring.authorId);
-  if (!user) {
-    throw new Response("Not Found User", { status: 404 });
-  }
-
   const reviews = await getReviewsByHotSpringId(hotSpring.id);
 
-  return json({ hotSpring, user, reviews });
+  return json({ hotSpring, currentUser, reviews });
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  const hotSpringId = params.id;
-  invariant(hotSpringId, "Invalid params");
-
-  const formDataObj = Object.fromEntries(await request.formData());
-
-  const validationResult = CreateReviewSchema.safeParse(formDataObj);
-  if (!validationResult.success) {
-    console.log(validationResult.error.flatten());
-    return json({
-      validationErrors: validationResult.error.flatten().fieldErrors,
-    });
+  const formData = await request.clone().formData();
+  const intent = formData.get("intent");
+  switch (intent) {
+    case INTENTS.createReviewIntent: {
+      return createReviewAction({ request, params });
+    }
+    case INTENTS.deleteReviewIntent: {
+      return deleteReviewAction({ request });
+    }
+    case INTENTS.deleteHotSpringIntent: {
+      return null;
+    }
+    default: {
+      throw new Response(`Invalid intent "${intent}"`, { status: 400 });
+    }
   }
-
-  const user = await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
-
-  await createReview({
-    reviewerId: user.id,
-    rating: validationResult.data.rating,
-    comment: validationResult.data.comment,
-    hotSpringId,
-  });
-
-  return jsonWithSuccess(null, "レビューが投稿されました！🎉");
 };
 
 export default function HotSpringRoute() {
-  const { hotSpring, user, reviews } = useLoaderData<typeof loader>();
+  const { hotSpring, currentUser, reviews } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const validationMessages = actionData?.validationErrors;
 
@@ -138,7 +133,7 @@ export default function HotSpringRoute() {
               </div>
               <Separator className="my-2" />
               <div>
-                登録者: <span>{user?.username}</span>
+                登録者: <span>{hotSpring.Author.username}</span>
               </div>
               <Separator className="my-2" />
             </CardContent>
@@ -167,6 +162,11 @@ export default function HotSpringRoute() {
             {/* レビュー投稿用フォーム */}
             <div className="pb-8">
               <Form method="POST" className="space-y-2">
+                <input
+                  type="hidden"
+                  name="intent"
+                  value={INTENTS.createReviewIntent}
+                />
                 <RatingGroup />
                 {validationMessages?.rating && (
                   <p className="text-sm font-bold text-red-500">
@@ -194,12 +194,35 @@ export default function HotSpringRoute() {
               <div className="space-y-2">
                 {reviews.map((review) => {
                   return (
-                    <div
+                    <Form
+                      method="POST"
                       key={review.id}
                       className="rounded-md border border-gray-300 p-2 shadow-none"
                     >
-                      <div className="font-bold">
-                        {review.Reviewer.username}
+                      <input
+                        type="hidden"
+                        name="intent"
+                        value={INTENTS.deleteReviewIntent}
+                      />
+                      <input type="hidden" name="reviewId" value={review.id} />
+                      <div className="flex h-8 items-center justify-between">
+                        <div className="font-bold">
+                          {review.Reviewer.username}
+                        </div>
+                        {/* ログインユーザーとレビュアーが一致している場合、削除ボタン表示 */}
+                        {currentUser.id === review.reviewerId && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="mr-1 hover:bg-gray-50"
+                          >
+                            <Trash2
+                              size={20}
+                              strokeWidth={1.5}
+                              color="#dc5656"
+                            />
+                          </Button>
+                        )}
                       </div>
                       <Rating
                         style={{ maxWidth: 100 }}
@@ -207,7 +230,7 @@ export default function HotSpringRoute() {
                         readOnly
                       />
                       <p className="line-clamp-2 break-all">{review.body}</p>
-                    </div>
+                    </Form>
                   );
                 })}
               </div>
@@ -217,4 +240,50 @@ export default function HotSpringRoute() {
       </div>
     </div>
   );
+}
+
+// レビュー作成用のaction関数
+async function createReviewAction({
+  request,
+  params,
+}: {
+  request: Request;
+  params: Params<string>;
+}) {
+  const hotSpringId = params.id;
+  invariant(hotSpringId, "Invalid params");
+
+  const formDataObj = Object.fromEntries(await request.formData());
+
+  const validationResult = CreateReviewSchema.safeParse(formDataObj);
+  if (!validationResult.success) {
+    console.log(validationResult.error.flatten());
+    return json({
+      validationErrors: validationResult.error.flatten().fieldErrors,
+    });
+  }
+
+  const user = await authenticator.isAuthenticated(request, {
+    failureRedirect: "/login",
+  });
+
+  await createReview({
+    reviewerId: user.id,
+    rating: validationResult.data.rating,
+    comment: validationResult.data.comment,
+    hotSpringId,
+  });
+
+  return jsonWithSuccess(null, "レビューが投稿されました！🎉");
+}
+
+// レビュー削除用のaction関数
+async function deleteReviewAction({ request }: { request: Request }) {
+  const formData = await request.formData();
+  const reviewId = String(formData.get("reviewId"));
+  invariant(reviewId, "Not Found reviewId");
+
+  await deleteReview(reviewId);
+
+  return jsonWithSuccess(null, "レビューが削除されました！🔥");
 }
