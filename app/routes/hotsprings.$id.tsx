@@ -153,38 +153,42 @@ export default function HotSpringRoute() {
                 最終更新：{" "}
                 {format(hotSpring.updatedAt, "yyyy年MM月dd日 HH時MM分")}
               </div>
-              <div className="flex gap-2">
-                <Link to="edit">
-                  <Button variant="outline">編集</Button>
-                </Link>
-
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive">削除</Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>本当に削除しますか？</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        この操作は取り消すことができません。
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>キャンセル</AlertDialogCancel>
-                      <Form method="POST">
-                        <input
-                          type="hidden"
-                          name="intent"
-                          value={INTENTS.deleteHotSpringIntent}
-                        />
-                        <AlertDialogAction variant="destructive" asChild>
-                          <Button type="submit">削除</Button>
-                        </AlertDialogAction>
-                      </Form>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
+              {/* ログインユーザーとレビュアーが一致している場合、編集・削除ボタン表示 */}
+              {hotSpring.Author.id === currentUser.id && (
+                <div className="flex gap-2">
+                  <Link to="edit">
+                    <Button variant="outline">編集</Button>
+                  </Link>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive">削除</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          本当に削除しますか？
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          この操作は取り消すことができません。
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                        <Form method="POST">
+                          <input
+                            type="hidden"
+                            name="intent"
+                            value={INTENTS.deleteHotSpringIntent}
+                          />
+                          <AlertDialogAction variant="destructive" asChild>
+                            <Button type="submit">削除</Button>
+                          </AlertDialogAction>
+                        </Form>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
             </CardFooter>
           </Card>
         </div>
