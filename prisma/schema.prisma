@@ -29,7 +29,7 @@ model Review {
   id          String    @id @default(uuid())
   body        String
   rating      Int
-  HotSpring   HotSpring @relation(fields: [hotSpringId], references: [id])
+  HotSpring   HotSpring @relation(fields: [hotSpringId], references: [id], onDelete: Cascade)
   hotSpringId String
   Reviewer    User      @relation(fields: [reviewerId], references: [id])
   reviewerId  String
