@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",
+    "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-scroll-area": "^1.0.5",
     "@radix-ui/react-separator": "^1.0.3",
