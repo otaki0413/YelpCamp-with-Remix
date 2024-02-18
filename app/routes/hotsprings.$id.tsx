@@ -7,7 +7,7 @@ import {
   useActionData,
   useLoaderData,
 } from "@remix-run/react";
-import { jsonWithSuccess } from "remix-toast";
+import { jsonWithSuccess, redirectWithSuccess } from "remix-toast";
 import { Rating } from "@smastrom/react-rating";
 import invariant from "tiny-invariant";
 import { format } from "date-fns";
@@ -25,7 +25,7 @@ import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
 import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
 import { authenticator } from "~/services/auth.server";
-import { getHotSpring } from "~/models/hotspring.server";
+import { deleteHotSpring, getHotSpring } from "~/models/hotspring.server";
 import {
   CreateReviewSchema,
   createReview,
@@ -33,6 +33,17 @@ import {
   getReviewsByHotSpringId,
 } from "~/models/review.server";
 import { RatingGroup } from "~/components/Rating";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
 
 export const IMAGES = [
   {
@@ -50,9 +61,9 @@ export const IMAGES = [
 ];
 
 const INTENTS = {
+  deleteHotSpringIntent: "deleteHotSpring" as const,
   createReviewIntent: "createReview" as const,
   deleteReviewIntent: "deleteReview" as const,
-  deleteHotSpringIntent: "createHotSpring" as const,
 };
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
@@ -77,14 +88,14 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   const formData = await request.clone().formData();
   const intent = formData.get("intent");
   switch (intent) {
+    case INTENTS.deleteHotSpringIntent: {
+      return deleteHotSpringAction({ params });
+    }
     case INTENTS.createReviewIntent: {
       return createReviewAction({ request, params });
     }
     case INTENTS.deleteReviewIntent: {
       return deleteReviewAction({ request });
-    }
-    case INTENTS.deleteHotSpringIntent: {
-      return null;
     }
     default: {
       throw new Response(`Invalid intent "${intent}"`, { status: 400 });
@@ -142,12 +153,42 @@ export default function HotSpringRoute() {
                 最終更新：{" "}
                 {format(hotSpring.updatedAt, "yyyy年MM月dd日 HH時MM分")}
               </div>
-              <div className="flex gap-2">
-                <Link to="edit">
-                  <Button variant="outline">編集</Button>
-                </Link>
-                <Button variant="destructive">削除</Button>
-              </div>
+              {/* ログインユーザーとレビュアーが一致している場合、編集・削除ボタン表示 */}
+              {hotSpring.Author.id === currentUser.id && (
+                <div className="flex gap-2">
+                  <Link to="edit">
+                    <Button variant="outline">編集</Button>
+                  </Link>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive">削除</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          本当に削除しますか？
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          この操作は取り消すことができません。
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                        <Form method="POST">
+                          <input
+                            type="hidden"
+                            name="intent"
+                            value={INTENTS.deleteHotSpringIntent}
+                          />
+                          <AlertDialogAction variant="destructive" asChild>
+                            <Button type="submit">削除</Button>
+                          </AlertDialogAction>
+                        </Form>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
             </CardFooter>
           </Card>
         </div>
@@ -240,6 +281,16 @@ export default function HotSpringRoute() {
       </div>
     </div>
   );
+}
+
+// 温泉情報削除用のaction関数
+async function deleteHotSpringAction({ params }: { params: Params<string> }) {
+  const hotSpringId = params.id;
+  invariant(hotSpringId, "Invalid params");
+
+  await deleteHotSpring(hotSpringId);
+
+  return redirectWithSuccess("/hotsprings", "温泉情報が削除されました！🔥");
 }
 
 // レビュー作成用のaction関数

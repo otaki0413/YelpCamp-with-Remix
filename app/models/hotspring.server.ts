@@ -56,3 +56,14 @@ export async function createHotSpring({
     throw new Error("Unexpected error");
   }
 }
+
+export async function deleteHotSpring(id: HotSpring["id"]) {
+  try {
+    return prisma.hotSpring.delete({
+      where: { id },
+    });
+  } catch (error) {
+    console.log(error);
+    throw new Error("Unexpected error");
+  }
+}
