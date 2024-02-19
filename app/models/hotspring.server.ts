@@ -57,6 +57,31 @@ export async function createHotSpring({
   }
 }
 
+export async function updateHotSpring({
+  id,
+  title,
+  location,
+  price,
+  description,
+  image,
+}: z.infer<typeof CreateHotSpringSchema> & { id: HotSpring["id"] }) {
+  try {
+    return await prisma.hotSpring.update({
+      where: { id },
+      data: {
+        title,
+        location,
+        price,
+        description,
+        filename: image,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    throw new Error("Unexpected error");
+  }
+}
+
 export async function deleteHotSpring(id: HotSpring["id"]) {
   try {
     return prisma.hotSpring.delete({
