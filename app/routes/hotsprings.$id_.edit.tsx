@@ -1,11 +1,22 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Form, Link, json, useLoaderData } from "@remix-run/react";
+import {
+  Form,
+  Link,
+  json,
+  useActionData,
+  useLoaderData,
+} from "@remix-run/react";
+import { redirectWithSuccess } from "remix-toast";
 import invariant from "tiny-invariant";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
-import { getHotSpring } from "~/models/hotspring.server";
+import {
+  CreateHotSpringSchema,
+  getHotSpring,
+  updateHotSpring,
+} from "~/models/hotspring.server";
 import { authenticator } from "~/services/auth.server";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
@@ -23,18 +34,44 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   return json({ hotSpring });
 };
 
-export const action = async ({ request }: ActionFunctionArgs) => {
-  return null;
+export const action = async ({ request, params }: ActionFunctionArgs) => {
+  await authenticator.isAuthenticated(request, {
+    failureRedirect: "/login",
+  });
+
+  const hotSpringId = params.id;
+  invariant(hotSpringId, "Invalid params");
+
+  const formDataObj = Object.fromEntries(await request.formData());
+
+  const validationResult = CreateHotSpringSchema.safeParse(formDataObj);
+  if (!validationResult.success) {
+    return json({
+      validationErrors: validationResult.error.flatten().fieldErrors,
+    });
+  }
+
+  const updatedHotSpring = await updateHotSpring({
+    ...validationResult.data,
+    id: hotSpringId,
+  });
+
+  return redirectWithSuccess(
+    `/hotsprings/${hotSpringId}`,
+    `${updatedHotSpring.title}を更新しました！✨`,
+  );
 };
 
 export default function EditRoute() {
   const { hotSpring } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
+  const validationMessages = actionData?.validationErrors;
 
   return (
     <div className="mx-auto w-full max-w-2xl px-8 py-8 sm:px-20">
       <div className="pb-4 text-center text-2xl font-bold">編集</div>
       <div>
-        <Form>
+        <Form method="POST">
           <div className="mb-4">
             <Label
               htmlFor="title"
@@ -46,9 +83,14 @@ export default function EditRoute() {
               type="text"
               id="title"
               name="title"
-              value={hotSpring.title}
+              defaultValue={hotSpring.title}
               required
             />
+            {validationMessages?.title && (
+              <p className="text-sm font-bold text-red-500">
+                {validationMessages?.title[0]}
+              </p>
+            )}
           </div>
           <div className="mb-4">
             <Label
@@ -61,9 +103,14 @@ export default function EditRoute() {
               type="location"
               id="location"
               name="location"
-              value={hotSpring.location}
+              defaultValue={hotSpring.location}
               required
             />
+            {validationMessages?.location && (
+              <p className="text-sm font-bold text-red-500">
+                {validationMessages?.location[0]}
+              </p>
+            )}
           </div>
           <div className="mb-4">
             <Label
@@ -76,9 +123,14 @@ export default function EditRoute() {
               type="number"
               id="price"
               name="price"
-              value={hotSpring.price}
+              defaultValue={hotSpring.price}
               required
             />
+            {validationMessages?.price && (
+              <p className="text-sm font-bold text-red-500">
+                {validationMessages?.price[0]}
+              </p>
+            )}
           </div>
           <div className="mb-4">
             <Label
@@ -90,9 +142,14 @@ export default function EditRoute() {
             <Textarea
               id="description"
               name="description"
-              value={hotSpring.description}
+              defaultValue={hotSpring.description}
               required
             />
+            {validationMessages?.description && (
+              <p className="text-sm font-bold text-red-500">
+                {validationMessages?.description[0]}
+              </p>
+            )}
           </div>
           <div className="mb-4">
             <Label
@@ -104,7 +161,9 @@ export default function EditRoute() {
             <Input type="file" id="image" name="image" required />
           </div>
           <div className="mt-8">
-            <Button className="w-full">更新する</Button>
+            <Button type="submit" className="w-full">
+              更新する
+            </Button>
           </div>
         </Form>
       </div>
