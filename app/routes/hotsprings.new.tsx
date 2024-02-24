@@ -42,6 +42,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   const formData = await parseMultipartFormData(request, uploadHandler);
   const imgUrls = formData.getAll("image");
+  formData.delete("image");
 
   const formDataObj = { ...Object.fromEntries(formData), images: imgUrls };
 
