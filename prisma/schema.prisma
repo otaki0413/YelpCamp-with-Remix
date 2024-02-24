@@ -26,7 +26,7 @@ model HotSpring {
 
 model HotSpringImage {
   id          String     @id @default(uuid())
-  url         String?
+  url         String
   filename    String?
   HotSpring   HotSpring? @relation(fields: [hotSpringId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   hotSpringId String?
