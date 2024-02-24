@@ -13,10 +13,21 @@ export async function getHotSpring(id: HotSpring["id"]) {
 
 export async function getHotSprings() {
   return await prisma.hotSpring.findMany({
-    select: { id: true, title: true, location: true, url: true },
+    select: { id: true, title: true, location: true },
     orderBy: { updatedAt: "desc" },
   });
 }
+
+// TODO: ファイルのバリデーションは今後実装してみたい
+// const MAX_UPLOAD_SIZE = 1024 * 1024 * 3; // 3MB
+// const ImageFieldSchema = z.object({
+//   url: z
+//     .instanceof(File)
+//     .optional()
+//     .refine((file) => {
+//       return !file || file.size <= MAX_UPLOAD_SIZE;
+//     }, "ファイルサイズが大きすぎます。3MB以下にしてください。"),
+// });
 
 export const CreateHotSpringSchema = z.object({
   title: z.string(),
@@ -25,7 +36,9 @@ export const CreateHotSpringSchema = z.object({
     .min(10, { message: "10文字以上で入力してください。" }),
   price: z.coerce.number().min(1, "1以上の数値を指定してください"),
   location: z.string(),
-  image: z.string(),
+  images: z
+    .array(z.string())
+    .max(5, "ファイルは最大5つまでしかアップロードできません。"),
 });
 
 export async function createHotSpring({
@@ -33,7 +46,7 @@ export async function createHotSpring({
   location,
   price,
   description,
-  image,
+  images,
   authorId,
 }: z.infer<typeof CreateHotSpringSchema> & { authorId: string }) {
   try {
@@ -43,7 +56,13 @@ export async function createHotSpring({
         location,
         price,
         description,
-        filename: image,
+        images: {
+          createMany: {
+            data: images.map((image) => {
+              return { url: image };
+            }),
+          },
+        },
         Author: {
           connect: {
             id: authorId,
