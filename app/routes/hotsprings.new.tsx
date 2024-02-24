@@ -1,4 +1,13 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import type {
+  UploadHandler,
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+} from "@remix-run/node";
+import {
+  unstable_parseMultipartFormData as parseMultipartFormData,
+  unstable_composeUploadHandlers as composeUploadHandlers,
+  unstable_createMemoryUploadHandler as createMemoryUploadHandler,
+} from "@remix-run/node";
 import { Form, Link, json, useActionData } from "@remix-run/react";
 import { redirectWithSuccess } from "remix-toast";
 import { Button } from "~/components/ui/button";
@@ -10,6 +19,7 @@ import {
   createHotSpring,
 } from "~/models/hotspring.server";
 import { authenticator } from "~/services/auth.server";
+import { uploadImageToCloudinary } from "~/utils/cloudinary.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   return await authenticator.isAuthenticated(request, {
@@ -18,7 +28,23 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const formDataObj = Object.fromEntries(await request.formData());
+  const uploadHandler: UploadHandler = composeUploadHandlers(
+    async ({ name, data, filename, contentType }) => {
+      if (name !== "image") {
+        return undefined;
+      }
+
+      const uploadedImage = await uploadImageToCloudinary(data); // data: 画像のバイナリデータ
+      return uploadedImage.secure_url;
+    },
+    createMemoryUploadHandler(),
+  );
+
+  const formData = await parseMultipartFormData(request, uploadHandler);
+  const imgUrls = formData.getAll("image");
+  formData.delete("image");
+
+  const formDataObj = { ...Object.fromEntries(formData), images: imgUrls };
 
   const validationResult = CreateHotSpringSchema.safeParse(formDataObj);
   if (!validationResult.success) {
@@ -48,7 +74,7 @@ export default function CreateRoute() {
     <div className="mx-auto w-full max-w-2xl px-8 py-8 sm:px-20">
       <div className="pb-4 text-center text-2xl font-bold">温泉の新規登録</div>
       <div>
-        <Form method="POST">
+        <Form method="POST" encType="multipart/form-data">
           <div className="mb-4">
             <Label
               htmlFor="title"
@@ -112,10 +138,16 @@ export default function CreateRoute() {
             >
               画像
             </Label>
-            <Input type="file" id="image" name="image" required />
-            {validationMessages?.image && (
+            <Input
+              type="file"
+              id="image"
+              name="image"
+              accept="image/*"
+              multiple
+            />
+            {validationMessages?.images && (
               <p className="text-sm font-bold text-red-500">
-                {validationMessages.image[0]}
+                {validationMessages.images[0]}
               </p>
             )}
           </div>
