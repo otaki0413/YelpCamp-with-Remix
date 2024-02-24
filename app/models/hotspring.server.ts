@@ -11,9 +11,18 @@ export async function getHotSpring(id: HotSpring["id"]) {
   });
 }
 
+// TODO: imagesの1件目が存在する場合、表示させる処理入れたい
 export async function getHotSprings() {
   return await prisma.hotSpring.findMany({
-    select: { id: true, title: true, location: true },
+    select: {
+      id: true,
+      title: true,
+      location: true,
+      images: true,
+      _count: {
+        select: { reviews: true },
+      },
+    },
     orderBy: { updatedAt: "desc" },
   });
 }
