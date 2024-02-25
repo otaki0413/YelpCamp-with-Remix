@@ -2,6 +2,31 @@ import type { HotSpring } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "~/db.server";
 
+// MEMO: $extendを用いたクライアント拡張は、現状できないっぽいので一旦対応中止
+// type HotSpringExtended = {
+//   id: string;
+//   reviews: Review[];
+// };
+// const extendedPrisma = prisma.$extends({
+//   result: {
+//     hotSpring: {
+//       ratingAvg: {
+//         needs: { reviews: true },
+//         compute(hotSpring: HotSpringExtended) {
+//           return prisma.review.aggregate({
+//             _avg: {
+//               rating: true,
+//             },
+//             where: {
+//               hotSpringId: hotSpring.id,
+//             },
+//           });
+//         },
+//       },
+//     },
+//   },
+// });
+
 export async function getHotSpring(id: HotSpring["id"]) {
   return await prisma.hotSpring.findUnique({
     where: { id },
