@@ -1,5 +1,7 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { Link, json, useLoaderData } from "@remix-run/react";
+import { Rating } from "@smastrom/react-rating";
+import { MessageCircleMore } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -55,8 +57,21 @@ export default function HotSpringsIndexRoute() {
                     <CardDescription>{location}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div>スター数：{ratingAvg ? ratingAvg : 0}</div>
-                    <div>コメント数：{_count.reviews}件</div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Rating
+                          style={{ maxWidth: "90px" }}
+                          readOnly
+                          value={ratingAvg}
+                        />
+                        <div className="font-bold">{ratingAvg}</div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MessageCircleMore strokeWidth={1.5} />
+                        <div className="text-sm">{_count.reviews}</div>
+                        <span className="text-sm">コメント</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </div>
                 <div className="flex w-1/2 items-center justify-center p-4">

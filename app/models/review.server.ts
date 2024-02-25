@@ -27,7 +27,8 @@ export async function getRatingAvg(id: HotSpring["id"]) {
         hotSpringId: id,
       },
     });
-    return result._avg.rating;
+
+    return result._avg.rating ? parseFloat(result._avg.rating.toFixed(2)) : 0; // 小数点第2位まで出す
   } catch (error) {
     console.log(error);
     throw new Error("Unexpected error");
