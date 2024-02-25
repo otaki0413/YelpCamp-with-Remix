@@ -16,6 +16,25 @@ export async function getReviewsByHotSpringId(id: HotSpring["id"]) {
   });
 }
 
+// 各温泉のレーティングの平均値を算出する
+export async function getRatingAvg(id: HotSpring["id"]) {
+  try {
+    const result = await prisma.review.aggregate({
+      _avg: {
+        rating: true,
+      },
+      where: {
+        hotSpringId: id,
+      },
+    });
+
+    return result._avg.rating ? parseFloat(result._avg.rating.toFixed(2)) : 0; // 小数点第2位まで出す
+  } catch (error) {
+    console.log(error);
+    throw new Error("Unexpected error");
+  }
+}
+
 export const CreateReviewSchema = z.object({
   rating: z.coerce
     .number()
