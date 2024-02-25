@@ -48,13 +48,15 @@ export default function HotSpringsIndexRoute() {
         {hotSprings.map(
           ({ id, title, location, images, ratingAvg, _count }) => (
             <Link key={id} to={`${id}`}>
-              <Card className="flex w-full">
+              <Card className="flex  h-[200px] w-full">
                 <div className="w-1/2">
-                  <CardHeader>
+                  <CardHeader className="min-h-28">
                     <CardTitle className="line-clamp-2 break-all">
                       {title}
                     </CardTitle>
-                    <CardDescription>{location}</CardDescription>
+                    <CardDescription className="line-clamp-1 break-all">
+                      {location}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
