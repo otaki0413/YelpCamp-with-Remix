@@ -45,21 +45,6 @@ import {
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
 
-export const IMAGES = [
-  {
-    id: 1,
-    src: "https://source.unsplash.com/body-of-water-on-near-rocks-UHcwyq05_Gk",
-  },
-  {
-    id: 2,
-    src: "https://source.unsplash.com/body-of-water-on-near-rocks-UHcwyq05_Gk",
-  },
-  {
-    id: 3,
-    src: "https://source.unsplash.com/body-of-water-on-near-rocks-UHcwyq05_Gk",
-  },
-];
-
 const INTENTS = {
   deleteHotSpringIntent: "deleteHotSpring" as const,
   createReviewIntent: "createReview" as const,
@@ -115,13 +100,13 @@ export default function HotSpringRoute() {
           <Card>
             <ScrollArea>
               <div className="flex gap-x-4 px-4 pt-4">
-                {IMAGES.map((image) => {
+                {hotSpring.images.map((image) => {
                   return (
                     <img
                       key={image.id}
-                      src={image.src}
+                      src={image.url}
                       alt={`${hotSpring.title}の画像`}
-                      className="rounded-md"
+                      className="border"
                     />
                   );
                 })}
