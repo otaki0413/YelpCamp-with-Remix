@@ -19,7 +19,10 @@ import {
   createHotSpring,
 } from "~/models/hotspring.server";
 import { authenticator } from "~/services/auth.server";
-import { uploadImageToCloudinary } from "~/utils/cloudinary.server";
+import {
+  CLOUDINARY_FOLDER_NAME,
+  uploadImageToCloudinary,
+} from "~/utils/cloudinary.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   return await authenticator.isAuthenticated(request, {
@@ -28,13 +31,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+  // TODO: 現状Cloudinaryのpublic_idを適切に取得する方法がわからないので、暫定対処として配列に格納する
+  const imgIds: string[] = [];
+
   const uploadHandler: UploadHandler = composeUploadHandlers(
-    async ({ name, data, filename, contentType }) => {
+    async ({ name, data }) => {
       if (name !== "image") {
         return undefined;
       }
-
       const uploadedImage = await uploadImageToCloudinary(data); // data: 画像のバイナリデータ
+      imgIds.push(uploadedImage.public_id);
       return uploadedImage.secure_url;
     },
     createMemoryUploadHandler(),
@@ -42,9 +48,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   const formData = await parseMultipartFormData(request, uploadHandler);
   const imgUrls = formData.getAll("image");
+  const images = createImagesObject(imgUrls, imgIds);
   formData.delete("image");
 
-  const formDataObj = { ...Object.fromEntries(formData), images: imgUrls };
+  const formDataObj = { ...Object.fromEntries(formData), images };
 
   const validationResult = CreateHotSpringSchema.safeParse(formDataObj);
   if (!validationResult.success) {
@@ -165,4 +172,14 @@ export default function CreateRoute() {
       </div>
     </div>
   );
+}
+
+// DBに保存する画像関連のオブジェクト作成
+function createImagesObject(urls: FormDataEntryValue[], ids: string[]) {
+  return urls.map((url, index) => {
+    return {
+      url,
+      publicId: ids[index].replace(`${CLOUDINARY_FOLDER_NAME}/`, ""), // 先頭のフォルダ名を削除
+    };
+  });
 }

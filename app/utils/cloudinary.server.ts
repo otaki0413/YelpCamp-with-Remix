@@ -8,12 +8,15 @@ cloudinary.v2.config({
   api_secret: process.env.API_SECRET,
 });
 
+export const CLOUDINARY_FOLDER_NAME = "HotSprings";
+
 export async function uploadImageToCloudinary(data: AsyncIterable<Uint8Array>) {
   const uploadPromise = new Promise<UploadApiResponse>(
     async (resolve, reject) => {
       const uploadStream: UploadStream = cloudinary.v2.uploader.upload_stream(
         {
-          folder: "HotSprings",
+          folder: CLOUDINARY_FOLDER_NAME,
+          unique_filename: true,
         },
         // アップロード完了時のコールバック
         (error, result) => {
