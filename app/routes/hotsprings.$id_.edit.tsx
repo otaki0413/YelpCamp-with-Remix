@@ -158,8 +158,42 @@ export default function EditRoute() {
             >
               画像
             </Label>
-            <Input type="file" id="image" name="image" required />
+            <Input type="file" id="image" name="image" />
           </div>
+
+          <div>
+            <Label
+              htmlFor="uploadedImage"
+              className="mb-2 block text-sm font-medium text-gray-600"
+            >
+              アップロード済み画像
+            </Label>
+            <div className="flex gap-x-2">
+              {hotSpring.images.map((image) => {
+                return (
+                  <div key={image.id}>
+                    <img
+                      src={image.url}
+                      alt={`温泉の写真${image.id}`}
+                      className="size-32 rounded-md border border-muted object-cover"
+                    />
+                    <div className="flex items-center gap-x-1">
+                      <input
+                        type="checkbox"
+                        name="deleteImages[]"
+                        id={`image${image.id}`}
+                        value={image.publicId}
+                      />
+                      <Label htmlFor={`image${image.id}`} className="text-sm">
+                        削除する
+                      </Label>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="mt-8">
             <Button type="submit" className="w-full">
               更新する

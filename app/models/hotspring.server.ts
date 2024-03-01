@@ -32,6 +32,7 @@ export async function getHotSpring(id: HotSpring["id"]) {
     where: { id },
     include: {
       Author: true,
+      images: true,
     },
   });
 }
@@ -49,6 +50,17 @@ export async function getHotSprings() {
       },
     },
     orderBy: { updatedAt: "desc" },
+  });
+}
+
+export async function getPublicIds(id: HotSpring["id"]) {
+  return prisma.hotSpringImage.findMany({
+    where: {
+      hotSpringId: id,
+    },
+    select: {
+      publicId: true,
+    },
   });
 }
 
@@ -71,8 +83,11 @@ export const CreateHotSpringSchema = z.object({
   price: z.coerce.number().min(1, "1以上の数値を指定してください"),
   location: z.string(),
   images: z
-    .array(z.string())
-    .max(5, "ファイルは最大5つまでしかアップロードできません。"),
+    .object({
+      url: z.string(),
+      publicId: z.string(),
+    })
+    .array(),
 });
 
 export async function createHotSpring({
@@ -93,7 +108,7 @@ export async function createHotSpring({
         images: {
           createMany: {
             data: images.map((image) => {
-              return { url: image };
+              return { url: image.url, publicId: image.publicId };
             }),
           },
         },

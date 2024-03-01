@@ -25,7 +25,11 @@ import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
 import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
 import { authenticator } from "~/services/auth.server";
-import { deleteHotSpring, getHotSpring } from "~/models/hotspring.server";
+import {
+  getHotSpring,
+  getPublicIds,
+  deleteHotSpring,
+} from "~/models/hotspring.server";
 import {
   CreateReviewSchema,
   createReview,
@@ -44,21 +48,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
-
-export const IMAGES = [
-  {
-    id: 1,
-    src: "https://source.unsplash.com/body-of-water-on-near-rocks-UHcwyq05_Gk",
-  },
-  {
-    id: 2,
-    src: "https://source.unsplash.com/body-of-water-on-near-rocks-UHcwyq05_Gk",
-  },
-  {
-    id: 3,
-    src: "https://source.unsplash.com/body-of-water-on-near-rocks-UHcwyq05_Gk",
-  },
-];
+import { deleteImageById } from "~/utils/cloudinary.server";
 
 const INTENTS = {
   deleteHotSpringIntent: "deleteHotSpring" as const,
@@ -115,13 +105,13 @@ export default function HotSpringRoute() {
           <Card>
             <ScrollArea>
               <div className="flex gap-x-4 px-4 pt-4">
-                {IMAGES.map((image) => {
+                {hotSpring.images.map((image) => {
                   return (
                     <img
                       key={image.id}
-                      src={image.src}
+                      src={image.url}
                       alt={`${hotSpring.title}の画像`}
-                      className="rounded-md"
+                      className="border"
                     />
                   );
                 })}
@@ -288,6 +278,16 @@ async function deleteHotSpringAction({ params }: { params: Params<string> }) {
   const hotSpringId = params.id;
   invariant(hotSpringId, "Invalid params");
 
+  // 温泉情報に紐づくpublic_idをすべて取得
+  const publicIds = await getPublicIds(hotSpringId);
+  console.log(publicIds);
+
+  // Cloudinary上から対象画像を削除
+  publicIds.forEach(async ({ publicId }) => {
+    await deleteImageById(publicId);
+  });
+
+  // 温泉情報のレコード削除
   await deleteHotSpring(hotSpringId);
 
   return redirectWithSuccess("/hotsprings", "温泉情報が削除されました！🔥");
