@@ -19,10 +19,7 @@ import {
   createHotSpring,
 } from "~/models/hotspring.server";
 import { authenticator } from "~/services/auth.server";
-import {
-  CLOUDINARY_FOLDER_NAME,
-  uploadImageToCloudinary,
-} from "~/utils/cloudinary.server";
+import { uploadImageToCloudinary } from "~/utils/cloudinary.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   return await authenticator.isAuthenticated(request, {
@@ -179,7 +176,7 @@ function createImagesObject(urls: FormDataEntryValue[], ids: string[]) {
   return urls.map((url, index) => {
     return {
       url,
-      publicId: ids[index].replace(`${CLOUDINARY_FOLDER_NAME}/`, ""), // 先頭のフォルダ名を削除
+      publicId: ids[index],
     };
   });
 }

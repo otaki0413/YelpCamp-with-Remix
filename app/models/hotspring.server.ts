@@ -53,6 +53,17 @@ export async function getHotSprings() {
   });
 }
 
+export async function getPublicIds(id: HotSpring["id"]) {
+  return prisma.hotSpringImage.findMany({
+    where: {
+      hotSpringId: id,
+    },
+    select: {
+      publicId: true,
+    },
+  });
+}
+
 // TODO: ファイルのバリデーションは今後実装してみたい
 // const MAX_UPLOAD_SIZE = 1024 * 1024 * 3; // 3MB
 // const ImageFieldSchema = z.object({
