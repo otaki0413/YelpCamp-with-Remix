@@ -1,4 +1,4 @@
-import type { HotSpring } from "@prisma/client";
+import type { HotSpring, HotSpringImage } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "~/db.server";
 
@@ -125,15 +125,38 @@ export async function createHotSpring({
   }
 }
 
+export const UpdateHotSpringSchema = z.object({
+  ...CreateHotSpringSchema.shape,
+  images: z
+    .object({
+      url: z.string(),
+      publicId: z.string(),
+    })
+    .array()
+    .optional(),
+});
+
 export async function updateHotSpring({
   id,
   title,
   location,
   price,
   description,
-  image,
-}: z.infer<typeof CreateHotSpringSchema> & { id: HotSpring["id"] }) {
+  images,
+}: z.infer<typeof UpdateHotSpringSchema> & { id: HotSpring["id"] }) {
   try {
+    // imagesがundefinedでない場合にのみ、dataオブジェクト作成
+    let imageData;
+    if (images) {
+      imageData = {
+        createMany: {
+          data: images.map((image) => {
+            return { url: image.url, publicId: image.publicId };
+          }),
+        },
+      };
+    }
+
     return await prisma.hotSpring.update({
       where: { id },
       data: {
@@ -141,7 +164,7 @@ export async function updateHotSpring({
         location,
         price,
         description,
-        filename: image,
+        images: imageData,
       },
     });
   } catch (error) {
@@ -154,6 +177,21 @@ export async function deleteHotSpring(id: HotSpring["id"]) {
   try {
     return prisma.hotSpring.delete({
       where: { id },
+    });
+  } catch (error) {
+    console.log(error);
+    throw new Error("Unexpected error");
+  }
+}
+
+export async function deleteHotSpringImages(Ids: HotSpringImage["publicId"][]) {
+  try {
+    return prisma.hotSpringImage.deleteMany({
+      where: {
+        publicId: {
+          in: Ids,
+        },
+      },
     });
   } catch (error) {
     console.log(error);

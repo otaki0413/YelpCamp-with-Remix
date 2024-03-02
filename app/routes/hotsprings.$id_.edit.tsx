@@ -1,4 +1,13 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import type {
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+  UploadHandler,
+} from "@remix-run/node";
+import {
+  unstable_parseMultipartFormData as parseMultipartFormData,
+  unstable_composeUploadHandlers as composeUploadHandlers,
+  unstable_createMemoryUploadHandler as createMemoryUploadHandler,
+} from "@remix-run/node";
 import {
   Form,
   Link,
@@ -13,11 +22,17 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import {
-  CreateHotSpringSchema,
+  UpdateHotSpringSchema,
+  deleteHotSpringImages,
   getHotSpring,
   updateHotSpring,
 } from "~/models/hotspring.server";
+import { createImagesObject } from "~/routes/hotsprings.new";
 import { authenticator } from "~/services/auth.server";
+import {
+  deleteImageById,
+  uploadImageToCloudinary,
+} from "~/utils/cloudinary.server";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   await authenticator.isAuthenticated(request, {
@@ -42,9 +57,43 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   const hotSpringId = params.id;
   invariant(hotSpringId, "Invalid params");
 
-  const formDataObj = Object.fromEntries(await request.formData());
+  const imgIds: string[] = [];
+  const uploadHandler: UploadHandler = composeUploadHandlers(
+    async ({ name, data }) => {
+      try {
+        if (name !== "image") {
+          return undefined;
+        }
+        const uploadedImage = await uploadImageToCloudinary(data);
+        imgIds.push(uploadedImage.public_id);
+        return uploadedImage.secure_url;
+      } catch (error) {
+        console.log(error);
+        return undefined;
+      }
+    },
+    createMemoryUploadHandler(),
+  );
 
-  const validationResult = CreateHotSpringSchema.safeParse(formDataObj);
+  const formData = await parseMultipartFormData(request, uploadHandler);
+  const imgUrls = formData.getAll("image");
+
+  // 削除対象のpublic_idの配列を取得
+  const deleteImgIds = formData.getAll("deleteImageId");
+  if (deleteImgIds.length > 0) {
+    // Cloudinaryから画像を削除する
+    deleteImgIds.forEach((id) => deleteImageById(String(id)));
+    // DBから画像レコードを削除する
+    await deleteHotSpringImages(deleteImgIds.map((id) => id.toString()));
+  }
+
+  const images = createImagesObject(imgUrls, imgIds);
+  // TODO: 下記は不要なプロパティの削除処理だが冗長なので、いずれ変えたい
+  formData.delete("image");
+  formData.delete("deleteImageId");
+
+  const formDataObj = { ...Object.fromEntries(formData), images };
+  const validationResult = UpdateHotSpringSchema.safeParse(formDataObj);
   if (!validationResult.success) {
     return json({
       validationErrors: validationResult.error.flatten().fieldErrors,
@@ -71,7 +120,7 @@ export default function EditRoute() {
     <div className="mx-auto w-full max-w-2xl px-8 py-8 sm:px-20">
       <div className="pb-4 text-center text-2xl font-bold">編集</div>
       <div>
-        <Form method="POST">
+        <Form method="POST" encType="multipart/form-data">
           <div className="mb-4">
             <Label
               htmlFor="title"
@@ -158,14 +207,11 @@ export default function EditRoute() {
             >
               画像
             </Label>
-            <Input type="file" id="image" name="image" />
+            <Input type="file" id="image" name="image" multiple />
           </div>
 
           <div>
-            <Label
-              htmlFor="uploadedImage"
-              className="mb-2 block text-sm font-medium text-gray-600"
-            >
+            <Label className="mb-2 block text-sm font-medium text-gray-600">
               アップロード済み画像
             </Label>
             <div className="flex gap-x-2">
@@ -180,7 +226,7 @@ export default function EditRoute() {
                     <div className="flex items-center gap-x-1">
                       <input
                         type="checkbox"
-                        name="deleteImages[]"
+                        name="deleteImageId"
                         id={`image${image.id}`}
                         value={image.publicId}
                       />
