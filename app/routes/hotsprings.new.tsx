@@ -147,6 +147,7 @@ export default function CreateRoute() {
               id="image"
               name="image"
               accept="image/*"
+              required
               multiple
             />
             {validationMessages?.images && (
@@ -171,8 +172,9 @@ export default function CreateRoute() {
   );
 }
 
+// TODO: この関数は新規登録と更新時に遣うので、別ファイルで持ったほうがいいかも？
 // DBに保存する画像関連のオブジェクト作成
-function createImagesObject(urls: FormDataEntryValue[], ids: string[]) {
+export function createImagesObject(urls: FormDataEntryValue[], ids: string[]) {
   return urls.map((url, index) => {
     return {
       url,
