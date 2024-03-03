@@ -67,7 +67,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   });
 
   // TODO: 第3引数にいれるべきかが分からないため調査する
-  return redirectWithSuccess("/", `${newHotSpring.title}を登録しました。`);
+  return redirectWithSuccess(
+    `/hotsprings`,
+    `${newHotSpring.title}を登録しました！🎉`,
+  );
 };
 
 export default function CreateRoute() {
