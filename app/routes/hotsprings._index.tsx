@@ -12,13 +12,8 @@ import {
 } from "~/components/ui/card";
 import { getHotSprings } from "~/models/hotspring.server";
 import { getRatingAvg } from "~/models/review.server";
-import { authenticator } from "~/services/auth.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
-
   const hotSprings = await getHotSprings();
   const hotSpringsWithAvg = await Promise.all(
     hotSprings.map(async (hotSpring) => {
