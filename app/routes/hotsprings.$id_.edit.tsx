@@ -22,6 +22,7 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import {
+  HotSpringSchema,
   UpdateHotSpringSchema,
   deleteHotSpringImages,
   getHotSpring,
@@ -57,47 +58,61 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   const hotSpringId = params.id;
   invariant(hotSpringId, "Invalid params");
 
-  const imgIds: string[] = [];
-  const uploadHandler: UploadHandler = composeUploadHandlers(
-    async ({ name, data }) => {
-      try {
+  // TODO: 後続の処理でrequestを使うためcloneしているが、別のやり方があれば変えたい
+  const formData = await request.clone().formData();
+  const formDataObj = Object.fromEntries(formData);
+  let validationResult;
+  validationResult = HotSpringSchema.safeParse(formDataObj);
+  if (!validationResult.success) {
+    return json({
+      validationErrors: validationResult.error.flatten().fieldErrors,
+    });
+  }
+
+  const imageData = formData.get("image");
+  // ファイルが空でない場合、parseMultipartFormDataで対応する
+  if (imageData instanceof Blob && imageData.size > 0) {
+    const imgIds: string[] = [];
+    const uploadHandler: UploadHandler = composeUploadHandlers(
+      async ({ name, data }) => {
         if (name !== "image") {
           return undefined;
         }
         const uploadedImage = await uploadImageToCloudinary(data);
         imgIds.push(uploadedImage.public_id);
         return uploadedImage.secure_url;
-      } catch (error) {
-        console.log(error);
-        return undefined;
-      }
-    },
-    createMemoryUploadHandler(),
-  );
+      },
+      createMemoryUploadHandler(),
+    );
 
-  const formData = await parseMultipartFormData(request, uploadHandler);
-  const imgUrls = formData.getAll("image");
+    const multipartFormData = await parseMultipartFormData(
+      request,
+      uploadHandler,
+    );
+    const imgUrls = multipartFormData.getAll("image");
+    const images = createImagesObject(imgUrls, imgIds);
+    multipartFormData.delete("image");
 
-  // 削除対象のpublic_idの配列を取得
+    const formDataObj = {
+      ...Object.fromEntries(multipartFormData),
+      images,
+    };
+
+    validationResult = UpdateHotSpringSchema.safeParse(formDataObj);
+    if (!validationResult.success) {
+      return json({
+        validationErrors: validationResult.error.flatten().fieldErrors,
+      });
+    }
+  }
+
+  // アップロード画像関連の削除
   const deleteImgIds = formData.getAll("deleteImageId");
   if (deleteImgIds.length > 0) {
     // Cloudinaryから画像を削除する
     deleteImgIds.forEach((id) => deleteImageById(String(id)));
     // DBから画像レコードを削除する
     await deleteHotSpringImages(deleteImgIds.map((id) => id.toString()));
-  }
-
-  const images = createImagesObject(imgUrls, imgIds);
-  // TODO: 下記は不要なプロパティの削除処理だが冗長なので、いずれ変えたい
-  formData.delete("image");
-  formData.delete("deleteImageId");
-
-  const formDataObj = { ...Object.fromEntries(formData), images };
-  const validationResult = UpdateHotSpringSchema.safeParse(formDataObj);
-  if (!validationResult.success) {
-    return json({
-      validationErrors: validationResult.error.flatten().fieldErrors,
-    });
   }
 
   const updatedHotSpring = await updateHotSpring({
@@ -207,7 +222,12 @@ export default function EditRoute() {
             >
               画像
             </Label>
-            <Input type="file" id="image" name="image" multiple />
+            <Input type="file" id="image" name="image" />
+            {validationMessages?.image && (
+              <p className="text-sm font-bold text-red-500">
+                {validationMessages.image[0]}
+              </p>
+            )}
           </div>
 
           <div>

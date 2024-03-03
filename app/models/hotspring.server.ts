@@ -64,16 +64,22 @@ export async function getPublicIds(id: HotSpring["id"]) {
   });
 }
 
-// TODO: ファイルのバリデーションは今後実装してみたい
-// const MAX_UPLOAD_SIZE = 1024 * 1024 * 3; // 3MB
-// const ImageFieldSchema = z.object({
-//   url: z
-//     .instanceof(File)
-//     .optional()
-//     .refine((file) => {
-//       return !file || file.size <= MAX_UPLOAD_SIZE;
-//     }, "ファイルサイズが大きすぎます。3MB以下にしてください。"),
-// });
+// TODO: この辺のスキーマは被っている箇所が多いので改善する
+const MAX_UPLOAD_SIZE = 1024 * 1024 * 3; // 3MB
+export const HotSpringSchema = z.object({
+  title: z.string(),
+  location: z.string(),
+  price: z.coerce.number().min(1, "1以上の数値を指定してください"),
+  description: z
+    .string()
+    .min(10, { message: "10文字以上で入力してください。" }),
+  image: z
+    .instanceof(Blob || File)
+    .optional()
+    .refine((file) => {
+      return !file || file.size <= MAX_UPLOAD_SIZE;
+    }, "ファイルサイズが大きすぎます。3MB以下にしてください。"),
+});
 
 export const CreateHotSpringSchema = z.object({
   title: z.string(),
@@ -126,7 +132,7 @@ export async function createHotSpring({
 }
 
 export const UpdateHotSpringSchema = z.object({
-  ...CreateHotSpringSchema.shape,
+  ...HotSpringSchema.shape,
   images: z
     .object({
       url: z.string(),
