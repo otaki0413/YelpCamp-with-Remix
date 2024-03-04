@@ -39,11 +39,11 @@ export default function App() {
   const links = user
     ? [
         { text: "ホーム", to: "/" },
-        { text: "温泉", to: "/hotsprings" },
+        { text: "温泉リスト", to: "/hotsprings" },
       ]
     : [
         { text: "ホーム", to: "/" },
-        { text: "温泉", to: "/hotsprings" },
+        { text: "温泉リスト", to: "/hotsprings" },
         { text: "新規登録", to: "/register" },
         { text: "ログイン", to: "/login" },
       ];

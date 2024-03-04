@@ -26,6 +26,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (user === null) {
     return redirectWithError("/login", "ログインが必要なルートです！🚧");
   }
+  return null;
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
