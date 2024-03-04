@@ -58,7 +58,7 @@ export default function App() {
   }, [toast]);
 
   return (
-    <Document title="YelpHotSpring">
+    <Document>
       <div className="flex min-h-screen flex-col justify-between">
         <header className="bg-gray-800 px-8 py-4">
           <nav>
