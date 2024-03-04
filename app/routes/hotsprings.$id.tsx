@@ -7,7 +7,11 @@ import {
   useActionData,
   useLoaderData,
 } from "@remix-run/react";
-import { jsonWithSuccess, redirectWithSuccess } from "remix-toast";
+import {
+  jsonWithSuccess,
+  redirectWithError,
+  redirectWithSuccess,
+} from "remix-toast";
 import { Rating } from "@smastrom/react-rating";
 import invariant from "tiny-invariant";
 import { format } from "date-fns";
@@ -57,10 +61,8 @@ const INTENTS = {
 };
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  // TODO: 認証せずとも閲覧はできるようにしたい
-  const currentUser = await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
+  const currentUser = await authenticator.isAuthenticated(request);
+
   const hotSpringId = params.id;
   invariant(hotSpringId, "Invalid params");
 
@@ -144,7 +146,7 @@ export default function HotSpringRoute() {
                 {format(hotSpring.updatedAt, "yyyy年MM月dd日 HH時MM分")}
               </div>
               {/* ログインユーザーとレビュアーが一致している場合、編集・削除ボタン表示 */}
-              {hotSpring.Author.id === currentUser.id && (
+              {hotSpring.Author.id === currentUser?.id && (
                 <div className="flex gap-2">
                   <Link to="edit">
                     <Button variant="outline">編集</Button>
@@ -241,7 +243,7 @@ export default function HotSpringRoute() {
                           {review.Reviewer.username}
                         </div>
                         {/* ログインユーザーとレビュアーが一致している場合、削除ボタン表示 */}
-                        {currentUser.id === review.reviewerId && (
+                        {currentUser?.id === review.reviewerId && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -314,9 +316,10 @@ async function createReviewAction({
     });
   }
 
-  const user = await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
+  const user = await authenticator.isAuthenticated(request);
+  if (user === null) {
+    return redirectWithError("/login", "ログインが必要な操作です！🚧");
+  }
 
   await createReview({
     reviewerId: user.id,
