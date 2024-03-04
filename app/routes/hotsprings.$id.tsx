@@ -79,12 +79,19 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 export const action = async ({ request, params }: ActionFunctionArgs) => {
   const formData = await request.clone().formData();
   const intent = formData.get("intent");
+
+  // 認証されていない場合はnullを返す
+  const user = await authenticator.isAuthenticated(request);
+  if (user === null) {
+    return redirectWithError("/login", "ログインが必要な操作です！🚧");
+  }
+
   switch (intent) {
     case INTENTS.deleteHotSpringIntent: {
       return deleteHotSpringAction({ params });
     }
     case INTENTS.createReviewIntent: {
-      return createReviewAction({ request, params });
+      return createReviewAction({ request, params, userId: user.id });
     }
     case INTENTS.deleteReviewIntent: {
       return deleteReviewAction({ request });
@@ -185,9 +192,6 @@ export default function HotSpringRoute() {
           </Card>
         </div>
         <div className="w-full md:w-2/5">
-          {/* <div className="size-72 w-full bg-red-100 text-center">
-            TODO: 地図をここに表示(Leaflet使う予定)
-          </div> */}
           <div>
             <div className="p-4 text-center text-xl font-bold underline">
               レビューコメント
@@ -299,9 +303,11 @@ async function deleteHotSpringAction({ params }: { params: Params<string> }) {
 async function createReviewAction({
   request,
   params,
+  userId,
 }: {
   request: Request;
   params: Params<string>;
+  userId: string;
 }) {
   const hotSpringId = params.id;
   invariant(hotSpringId, "Invalid params");
@@ -316,13 +322,8 @@ async function createReviewAction({
     });
   }
 
-  const user = await authenticator.isAuthenticated(request);
-  if (user === null) {
-    return redirectWithError("/login", "ログインが必要な操作です！🚧");
-  }
-
   await createReview({
-    reviewerId: user.id,
+    reviewerId: userId,
     rating: validationResult.data.rating,
     comment: validationResult.data.comment,
     hotSpringId,
