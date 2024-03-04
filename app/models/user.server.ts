@@ -40,6 +40,8 @@ export async function createUser({
       },
     });
   } catch (error) {
+    // Prismaの一意制約エラーを拾う処理
+    // https://www.prisma.io/docs/orm/reference/error-reference#error-codes
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"

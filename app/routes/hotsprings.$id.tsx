@@ -7,7 +7,11 @@ import {
   useActionData,
   useLoaderData,
 } from "@remix-run/react";
-import { jsonWithSuccess, redirectWithSuccess } from "remix-toast";
+import {
+  jsonWithSuccess,
+  redirectWithError,
+  redirectWithSuccess,
+} from "remix-toast";
 import { Rating } from "@smastrom/react-rating";
 import invariant from "tiny-invariant";
 import { format } from "date-fns";
@@ -57,10 +61,8 @@ const INTENTS = {
 };
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  // TODO: 認証せずとも閲覧はできるようにしたい
-  const currentUser = await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
+  const currentUser = await authenticator.isAuthenticated(request);
+
   const hotSpringId = params.id;
   invariant(hotSpringId, "Invalid params");
 
@@ -75,14 +77,21 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
+  // 認証されていない場合はnullが返されるので、ログインページへリダイレクト
+  const user = await authenticator.isAuthenticated(request);
+  if (user === null) {
+    return redirectWithError("/login", "ログインが必要な操作です！🚧");
+  }
+
   const formData = await request.clone().formData();
   const intent = formData.get("intent");
+
   switch (intent) {
     case INTENTS.deleteHotSpringIntent: {
       return deleteHotSpringAction({ params });
     }
     case INTENTS.createReviewIntent: {
-      return createReviewAction({ request, params });
+      return createReviewAction({ request, params, userId: user.id });
     }
     case INTENTS.deleteReviewIntent: {
       return deleteReviewAction({ request });
@@ -144,7 +153,7 @@ export default function HotSpringRoute() {
                 {format(hotSpring.updatedAt, "yyyy年MM月dd日 HH時MM分")}
               </div>
               {/* ログインユーザーとレビュアーが一致している場合、編集・削除ボタン表示 */}
-              {hotSpring.Author.id === currentUser.id && (
+              {hotSpring.Author.id === currentUser?.id && (
                 <div className="flex gap-2">
                   <Link to="edit">
                     <Button variant="outline">編集</Button>
@@ -183,9 +192,6 @@ export default function HotSpringRoute() {
           </Card>
         </div>
         <div className="w-full md:w-2/5">
-          {/* <div className="size-72 w-full bg-red-100 text-center">
-            TODO: 地図をここに表示(Leaflet使う予定)
-          </div> */}
           <div>
             <div className="p-4 text-center text-xl font-bold underline">
               レビューコメント
@@ -241,7 +247,7 @@ export default function HotSpringRoute() {
                           {review.Reviewer.username}
                         </div>
                         {/* ログインユーザーとレビュアーが一致している場合、削除ボタン表示 */}
-                        {currentUser.id === review.reviewerId && (
+                        {currentUser?.id === review.reviewerId && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -297,9 +303,11 @@ async function deleteHotSpringAction({ params }: { params: Params<string> }) {
 async function createReviewAction({
   request,
   params,
+  userId,
 }: {
   request: Request;
   params: Params<string>;
+  userId: string;
 }) {
   const hotSpringId = params.id;
   invariant(hotSpringId, "Invalid params");
@@ -314,12 +322,8 @@ async function createReviewAction({
     });
   }
 
-  const user = await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
-
   await createReview({
-    reviewerId: user.id,
+    reviewerId: userId,
     rating: validationResult.data.rating,
     comment: validationResult.data.comment,
     hotSpringId,

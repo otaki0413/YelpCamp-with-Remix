@@ -12,13 +12,8 @@ import {
 } from "~/components/ui/card";
 import { getHotSprings } from "~/models/hotspring.server";
 import { getRatingAvg } from "~/models/review.server";
-import { authenticator } from "~/services/auth.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
-
   const hotSprings = await getHotSprings();
   const hotSpringsWithAvg = await Promise.all(
     hotSprings.map(async (hotSpring) => {
@@ -41,7 +36,7 @@ export default function HotSpringsIndexRoute() {
       <div className="pb-4 text-center text-2xl font-bold">温泉リスト</div>
       <div className="mb-4 flex justify-end">
         <Button asChild variant="outline">
-          <Link to="new">新規登録へ</Link>
+          <Link to="/hotsprings/new">温泉登録へ</Link>
         </Button>
       </div>
       <div className="grid w-full grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">

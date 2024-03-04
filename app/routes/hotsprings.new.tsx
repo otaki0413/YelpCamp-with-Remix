@@ -9,7 +9,7 @@ import {
   unstable_createMemoryUploadHandler as createMemoryUploadHandler,
 } from "@remix-run/node";
 import { Form, Link, json, useActionData } from "@remix-run/react";
-import { redirectWithSuccess } from "remix-toast";
+import { redirectWithError, redirectWithSuccess } from "remix-toast";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -22,12 +22,18 @@ import { authenticator } from "~/services/auth.server";
 import { uploadImageToCloudinary } from "~/utils/cloudinary.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  return await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
+  const user = await authenticator.isAuthenticated(request);
+  if (user === null) {
+    return redirectWithError("/login", "ログインが必要なルートです！🚧");
+  }
+  return null;
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+  const user = await authenticator.isAuthenticated(request);
+  if (user === null) {
+    return redirectWithError("/login", "ログインが必要な操作です！🚧");
+  }
   // TODO: 現状Cloudinaryのpublic_idを適切に取得する方法がわからないので、暫定対処として配列に格納する
   const imgIds: string[] = [];
 
@@ -57,17 +63,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
   }
 
-  const user = await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
-
   const newHotSpring = await createHotSpring({
     ...validationResult.data,
     authorId: user.id,
   });
 
   // TODO: 第3引数にいれるべきかが分からないため調査する
-  return redirectWithSuccess("/", `${newHotSpring.title}を登録しました。`);
+  return redirectWithSuccess(
+    `/hotsprings`,
+    `${newHotSpring.title}を登録しました！🎉`,
+  );
 };
 
 export default function CreateRoute() {

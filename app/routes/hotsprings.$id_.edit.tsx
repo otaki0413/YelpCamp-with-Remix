@@ -15,7 +15,7 @@ import {
   useActionData,
   useLoaderData,
 } from "@remix-run/react";
-import { redirectWithSuccess } from "remix-toast";
+import { redirectWithError, redirectWithSuccess } from "remix-toast";
 import invariant from "tiny-invariant";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -36,9 +36,11 @@ import {
 } from "~/utils/cloudinary.server";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
+  const user = await authenticator.isAuthenticated(request);
+  // TODO: 下記トースターが2回実行されるのはなぜか分からないので調査中
+  if (user === null) {
+    return redirectWithError("/login", "ログインが必要なルートです！🚧");
+  }
   const hotSpringId = params.id;
   invariant(hotSpringId, "Invalid params");
 
@@ -51,9 +53,10 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
+  const user = await authenticator.isAuthenticated(request);
+  if (user === null) {
+    return redirectWithError("/login", "ログインが必要な操作です！🚧");
+  }
 
   const hotSpringId = params.id;
   invariant(hotSpringId, "Invalid params");
