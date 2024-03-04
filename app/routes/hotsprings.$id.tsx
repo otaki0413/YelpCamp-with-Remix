@@ -77,14 +77,14 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  const formData = await request.clone().formData();
-  const intent = formData.get("intent");
-
-  // 認証されていない場合はnullを返す
+  // 認証されていない場合はnullが返されるので、ログインページへリダイレクト
   const user = await authenticator.isAuthenticated(request);
   if (user === null) {
     return redirectWithError("/login", "ログインが必要な操作です！🚧");
   }
+
+  const formData = await request.clone().formData();
+  const intent = formData.get("intent");
 
   switch (intent) {
     case INTENTS.deleteHotSpringIntent: {
