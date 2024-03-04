@@ -17,6 +17,7 @@ import { useEffect } from "react";
 import { getToast } from "remix-toast";
 import { toast as notify } from "sonner";
 import { Toaster } from "~/components/ui/sonner";
+import { authenticator } from "~/services/auth.server";
 import cssStyles from "@smastrom/react-rating/style.css";
 import tailwindStyles from "./tailwind.css";
 
@@ -26,12 +27,26 @@ export const links: LinksFunction = () => [
 ];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const user = await authenticator.isAuthenticated(request);
   const { toast, headers } = await getToast(request);
-  return json({ toast }, { headers });
+  return json({ user, toast }, { headers });
 };
 
 export default function App() {
-  const { toast } = useLoaderData<typeof loader>();
+  const { user, toast } = useLoaderData<typeof loader>();
+
+  // セッション有無に応じてヘッダーのリンクを切り替える
+  const links = user
+    ? [
+        { text: "ホーム", to: "/" },
+        { text: "温泉", to: "/hotsprings" },
+      ]
+    : [
+        { text: "ホーム", to: "/" },
+        { text: "温泉", to: "/hotsprings" },
+        { text: "新規登録", to: "/register" },
+        { text: "ログイン", to: "/login" },
+      ];
 
   useEffect(() => {
     if (toast?.type === "error") {
@@ -42,16 +57,8 @@ export default function App() {
     }
   }, [toast]);
 
-  // TODO: session有無に応じて、要素を切り替える
-  const links = [
-    { text: "ホーム", to: "/" },
-    { text: "温泉", to: "/hotsprings" },
-    { text: "新規登録", to: "/register" },
-    { text: "ログイン", to: "/login" },
-  ];
-
   return (
-    <Document>
+    <Document title="YelpHotSpring">
       <div className="flex min-h-screen flex-col justify-between">
         <header className="bg-gray-800 px-8 py-4">
           <nav>
@@ -71,12 +78,14 @@ export default function App() {
                     {link.text}
                   </Link>
                 ))}
-                {/* TODO:セッションが存在する場合、ログアウトボタン表示 */}
-                <Form action="/logout" method="post">
-                  <button className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white">
-                    ログアウト
-                  </button>
-                </Form>
+                {/* セッションが存在する場合、ログアウトボタン表示 */}
+                {user && (
+                  <Form action="/logout" method="post">
+                    <button className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white">
+                      ログアウト
+                    </button>
+                  </Form>
+                )}
               </div>
             </div>
           </nav>
@@ -88,7 +97,7 @@ export default function App() {
 
         <footer className="bg-gray-800 px-8 py-4 text-white">
           <div className="flex justify-center">
-            <small>&copy; 2024 example</small>
+            <small>&copy; 2024 otaki</small>
           </div>
         </footer>
       </div>
