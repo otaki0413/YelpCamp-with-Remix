@@ -1,38 +1,48 @@
-# Welcome to Remix!
+# [YelpHotSpring](https://yelp-hotspring-otaki.koyeb.app/)
 
-- [Remix Docs](https://remix.run/docs)
+# 概要
 
-## Development
+- Remixを使用した温泉レビューアプリ
+- Udemyの[こちらの動画](https://www.udemy.com/share/105zPc3@NpDQUQSPXxo8wsixEW0L4KBRUwiZPYtLiuC9FhkZsEIwLiYBKO0CYhPEapplWE5a_Q==/)の成果物をモダンな技術で置き換えたいと思って作ったものになります。
 
-From your terminal:
+# URL
 
-```sh
-npm run dev
-```
+https://yelp-hotspring-otaki.koyeb.app/
 
-This starts your app in development mode, rebuilding assets on file changes.
+# 主な使用技術
 
-## Deployment
+- Remix
+- TypeScript
+- shadcn/ui
+- remix-auth
+- Prisma
+- PlanetScale
+- Cloudinary
+- Koyeb
 
-First, build your app for production:
+# 機能一覧
 
-```sh
-npm run build
-```
+- ユーザー登録・ログイン機能
+- 投稿関連
+  - 温泉情報の登録・編集・削除
+  - 画像のアップロード
+- レビュー関連
+  - レビューの投稿・削除
 
-Then run the app in production mode:
+# イメージ
 
-```sh
-npm start
-```
+### 温泉一覧画面
 
-Now you'll need to pick a host to deploy it to.
+![alt text](<CleanShot 2024-03-06 at 21.23.00.png>)
 
-### DIY
+### 温泉詳細画面
 
-If you're familiar with deploying node applications, the built-in Remix app server is production-ready.
+![alt text](<CleanShot 2024-03-06 at 21.24.38.png>)
 
-Make sure to deploy the output of `remix build`
+### 温泉登録画面
 
-- `build/`
-- `public/build/`
+![alt text](<CleanShot 2024-03-06 at 21.25.51.png>)
+
+### 温泉編集画面
+
+![alt text](<CleanShot 2024-03-06 at 21.25.19.png>)
