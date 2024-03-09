@@ -41,12 +41,20 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   if (user === null) {
     return redirectWithError("/login", "ログインが必要なルートです！🚧");
   }
+
   const hotSpringId = params.id;
   invariant(hotSpringId, "Invalid params");
 
   const hotSpring = await getHotSpring(hotSpringId);
   if (!hotSpring) {
     throw new Response("Not Found", { status: 404 });
+  }
+
+  if (user.id !== hotSpring.authorId) {
+    return redirectWithError(
+      `/hotSprings/${hotSpring.id}`,
+      "あなたにこの温泉情報を編集できません！🚧",
+    );
   }
 
   return json({ hotSpring });
