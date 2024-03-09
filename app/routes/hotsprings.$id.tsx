@@ -349,11 +349,7 @@ async function createReviewAction({
     hotSpringId,
   });
 
-  // return jsonWithSuccess(null, "レビューが投稿されました！🎉");
-  return redirectWithSuccess(
-    `/hotsprings/${hotSpringId}`,
-    "レビューが投稿されました！🎉",
-  );
+  return jsonWithSuccess(null, "レビューが投稿されました！🎉");
 }
 
 // レビュー削除用のaction関数
