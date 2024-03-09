@@ -16,6 +16,7 @@ import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import {
   CreateHotSpringSchema,
+  HotSpringSchema,
   createHotSpring,
 } from "~/models/hotspring.server";
 import { authenticator } from "~/services/auth.server";
@@ -34,33 +35,53 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (user === null) {
     return redirectWithError("/login", "ログインが必要な操作です！🚧");
   }
-  // TODO: 現状Cloudinaryのpublic_idを適切に取得する方法がわからないので、暫定対処として配列に格納する
-  const imgIds: string[] = [];
 
-  const uploadHandler: UploadHandler = composeUploadHandlers(
-    async ({ name, data }) => {
-      if (name !== "image") {
-        return undefined;
-      }
-      const uploadedImage = await uploadImageToCloudinary(data); // data: 画像のバイナリデータ
-      imgIds.push(uploadedImage.public_id);
-      return uploadedImage.secure_url;
-    },
-    createMemoryUploadHandler(),
-  );
-
-  const formData = await parseMultipartFormData(request, uploadHandler);
-  const imgUrls = formData.getAll("image");
-  const images = createImagesObject(imgUrls, imgIds);
-  formData.delete("image");
-
-  const formDataObj = { ...Object.fromEntries(formData), images };
-
-  const validationResult = CreateHotSpringSchema.safeParse(formDataObj);
+  // TODO: 後続の処理でrequestを使うためcloneしているが、別のやり方があれば変えたい
+  const formData = await request.clone().formData();
+  const formDataObj = Object.fromEntries(formData);
+  let validationResult;
+  validationResult = HotSpringSchema.safeParse(formDataObj);
   if (!validationResult.success) {
     return json({
       validationErrors: validationResult.error.flatten().fieldErrors,
     });
+  }
+
+  const imageData = formData.get("image");
+  // ファイルが空でない場合、parseMultipartFormDataで対応する
+  if (imageData instanceof Blob && imageData.size > 0) {
+    const imgIds: string[] = [];
+    const uploadHandler: UploadHandler = composeUploadHandlers(
+      async ({ name, data }) => {
+        if (name !== "image") {
+          return undefined;
+        }
+        const uploadedImage = await uploadImageToCloudinary(data);
+        imgIds.push(uploadedImage.public_id);
+        return uploadedImage.secure_url;
+      },
+      createMemoryUploadHandler(),
+    );
+
+    const multipartFormData = await parseMultipartFormData(
+      request,
+      uploadHandler,
+    );
+    const imgUrls = multipartFormData.getAll("image");
+    const images = createImagesObject(imgUrls, imgIds);
+    multipartFormData.delete("image");
+
+    const formDataObj = {
+      ...Object.fromEntries(multipartFormData),
+      images,
+    };
+
+    validationResult = CreateHotSpringSchema.safeParse(formDataObj);
+    if (!validationResult.success) {
+      return json({
+        validationErrors: validationResult.error.flatten().fieldErrors,
+      });
+    }
   }
 
   const newHotSpring = await createHotSpring({
@@ -68,7 +89,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     authorId: user.id,
   });
 
-  // TODO: 第3引数にいれるべきかが分からないため調査する
   return redirectWithSuccess(
     `/hotsprings`,
     `${newHotSpring.title}を登録しました！🎉`,
@@ -155,9 +175,9 @@ export default function CreateRoute() {
               required
               multiple
             />
-            {validationMessages?.images && (
+            {validationMessages?.image && (
               <p className="text-sm font-bold text-red-500">
-                {validationMessages.images[0]}
+                {validationMessages.image[0]}
               </p>
             )}
           </div>
