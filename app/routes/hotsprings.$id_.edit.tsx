@@ -23,7 +23,7 @@ import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import {
   HotSpringSchema,
-  UpdateHotSpringSchema,
+  CreateHotSpringSchema,
   deleteHotSpringImages,
   getHotSpring,
   updateHotSpring,
@@ -101,7 +101,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       images,
     };
 
-    validationResult = UpdateHotSpringSchema.safeParse(formDataObj);
+    validationResult = CreateHotSpringSchema.safeParse(formDataObj);
     if (!validationResult.success) {
       return json({
         validationErrors: validationResult.error.flatten().fieldErrors,

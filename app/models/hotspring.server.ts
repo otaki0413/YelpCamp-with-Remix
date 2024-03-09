@@ -64,8 +64,8 @@ export async function getPublicIds(id: HotSpring["id"]) {
   });
 }
 
-// TODO: この辺のスキーマは被っている箇所が多いので改善する
 const MAX_UPLOAD_SIZE = 1024 * 1024 * 3; // 3MB
+
 export const HotSpringSchema = z.object({
   title: z.string(),
   location: z.string(),
@@ -82,18 +82,14 @@ export const HotSpringSchema = z.object({
 });
 
 export const CreateHotSpringSchema = z.object({
-  title: z.string(),
-  description: z
-    .string()
-    .min(10, { message: "10文字以上で入力してください。" }),
-  price: z.coerce.number().min(1, "1以上の数値を指定してください"),
-  location: z.string(),
+  ...HotSpringSchema.shape,
   images: z
     .object({
       url: z.string(),
       publicId: z.string(),
     })
-    .array(),
+    .array()
+    .optional(),
 });
 
 export async function createHotSpring({
@@ -105,19 +101,25 @@ export async function createHotSpring({
   authorId,
 }: z.infer<typeof CreateHotSpringSchema> & { authorId: string }) {
   try {
+    // imagesがundefinedでない場合にのみ、dataオブジェクト作成
+    let imageData;
+    if (images) {
+      imageData = {
+        createMany: {
+          data: images.map((image) => {
+            return { url: image.url, publicId: image.publicId };
+          }),
+        },
+      };
+    }
+
     return await prisma.hotSpring.create({
       data: {
         title,
         location,
         price,
         description,
-        images: {
-          createMany: {
-            data: images.map((image) => {
-              return { url: image.url, publicId: image.publicId };
-            }),
-          },
-        },
+        images: imageData,
         Author: {
           connect: {
             id: authorId,
@@ -131,17 +133,7 @@ export async function createHotSpring({
   }
 }
 
-export const UpdateHotSpringSchema = z.object({
-  ...HotSpringSchema.shape,
-  images: z
-    .object({
-      url: z.string(),
-      publicId: z.string(),
-    })
-    .array()
-    .optional(),
-});
-
+// TODO: createHotSpringとやっていることは同等なので共通化したい
 export async function updateHotSpring({
   id,
   title,
@@ -149,7 +141,7 @@ export async function updateHotSpring({
   price,
   description,
   images,
-}: z.infer<typeof UpdateHotSpringSchema> & { id: HotSpring["id"] }) {
+}: z.infer<typeof CreateHotSpringSchema> & { id: HotSpring["id"] }) {
   try {
     // imagesがundefinedでない場合にのみ、dataオブジェクト作成
     let imageData;
