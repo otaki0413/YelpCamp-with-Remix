@@ -172,7 +172,6 @@ export default function CreateRoute() {
               id="image"
               name="image"
               accept="image/*"
-              required
               multiple
             />
             {validationMessages?.image && (
