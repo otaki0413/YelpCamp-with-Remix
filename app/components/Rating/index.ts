@@ -1,1 +1,1 @@
-export { RatingGroup } from "./RatingGroup";
+export { RatingForm } from "./RatingForm";

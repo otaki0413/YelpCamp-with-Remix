@@ -1,29 +1,21 @@
 import { useState } from "react";
 
-export const RatingGroup: React.FC = () => {
-  const [rating, setRating] = useState(0);
+type Props = {
+  rating: number;
+  setRating: React.Dispatch<React.SetStateAction<number>>;
+};
+
+export const RatingForm: React.FC<Props> = ({ rating, setRating }) => {
   const [hoveredRating, setHoveredRating] = useState(0);
-
-  const handleStarClick = (value: number) => {
-    setRating(value);
-  };
-
-  const handleStarHover = (value: number) => {
-    setHoveredRating(value);
-  };
-
-  const handleStarLeave = () => {
-    setHoveredRating(0);
-  };
 
   return (
     <div className="flex items-center">
       {[1, 2, 3, 4, 5].map((value) => (
         <div
           key={value}
-          onClick={() => handleStarClick(value)}
-          onMouseEnter={() => handleStarHover(value)}
-          onMouseLeave={handleStarLeave}
+          onClick={() => setRating(value)}
+          onMouseEnter={() => setHoveredRating(value)}
+          onMouseLeave={() => setHoveredRating(0)}
           className="relative cursor-pointer"
         >
           <input
@@ -31,11 +23,11 @@ export const RatingGroup: React.FC = () => {
             name="rating"
             value={value}
             checked={value === rating}
-            onChange={() => handleStarClick(value)}
+            onChange={() => setRating(value)}
             className="hidden"
           />
           <span
-            className={`text-3xl  ${
+            className={`text-3xl ${
               value <= (hoveredRating || rating)
                 ? "text-yellow-500"
                 : "text-gray-500"

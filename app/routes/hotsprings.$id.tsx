@@ -6,6 +6,7 @@ import {
   json,
   useActionData,
   useLoaderData,
+  useNavigation,
 } from "@remix-run/react";
 import {
   jsonWithSuccess,
@@ -40,7 +41,7 @@ import {
   deleteReview,
   getReviewsByHotSpringId,
 } from "~/models/review.server";
-import { RatingGroup } from "~/components/Rating";
+import { RatingForm } from "~/components/Rating";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,6 +54,7 @@ import {
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
 import { deleteImageById } from "~/utils/cloudinary.server";
+import { useEffect, useRef, useState } from "react";
 
 const INTENTS = {
   deleteHotSpringIntent: "deleteHotSpring" as const,
@@ -103,9 +105,27 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 };
 
 export default function HotSpringRoute() {
+  const [rating, setRating] = useState(0);
+  const $form = useRef<HTMLFormElement>(null);
+  const navigation = useNavigation();
+
   const { hotSpring, currentUser, reviews } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const validationMessages = actionData?.validationErrors;
+
+  useEffect(
+    // フォーム送信後のリセット処理
+    function resetFormOnSuccess() {
+      if (
+        navigation.state === "idle" &&
+        actionData?.validationErrors === undefined
+      ) {
+        $form.current?.reset();
+        setRating(0);
+      }
+    },
+    [navigation.state, actionData],
+  );
 
   return (
     <div className="w-full p-4">
@@ -198,13 +218,13 @@ export default function HotSpringRoute() {
             </div>
             {/* レビュー投稿用フォーム */}
             <div className="pb-8">
-              <Form method="POST" className="space-y-2">
+              <Form method="POST" ref={$form} className="space-y-2">
                 <input
                   type="hidden"
                   name="intent"
                   value={INTENTS.createReviewIntent}
                 />
-                <RatingGroup />
+                <RatingForm rating={rating} setRating={setRating} />
                 {validationMessages?.rating && (
                   <p className="text-sm font-bold text-red-500">
                     {validationMessages?.rating[0]}
