@@ -11,14 +11,13 @@ https://yelp-hotspring-otaki.koyeb.app/
 
 # 主な使用技術
 
-- Remix
+- [Remix](https://remix.run/)
 - TypeScript
-- shadcn/ui
-- remix-auth
-- Prisma
-- PlanetScale
-- Cloudinary
-- Koyeb
+- [shadcn/ui](https://ui.shadcn.com/)（スタイリング）
+- [remix-auth](https://github.com/sergiodxa/remix-auth)（認証）
+- [Prisma](https://www.prisma.io/)（ORM）
+- [Cloudinary](https://cloudinary.com)（画像ストレージ）
+- [Koyeb](https://www.koyeb.com/)（デプロイ・DB）
 
 # 機能一覧
 
@@ -28,4 +27,3 @@ https://yelp-hotspring-otaki.koyeb.app/
   - 画像のアップロード
 - レビュー関連
   - レビューの投稿・削除
-
