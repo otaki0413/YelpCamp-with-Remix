@@ -1,19 +1,19 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Form, useActionData } from "@remix-run/react";
-import { jsonWithError } from "remix-toast";
+import { Form } from "react-router";
+import { dataWithError } from "remix-toast";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { CreateUserSchema, createUser } from "~/models/user.server";
 import { AUTH_STRATEGY_NAME, authenticator } from "~/services/auth.server";
+import type { Route } from ".react-router/types/app/routes/+types/register";
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+export const loader = async ({ request }: Route.LoaderArgs) => {
   return await authenticator.isAuthenticated(request, {
     successRedirect: "/hotsprings",
   });
 };
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request }: Route.ActionArgs) {
   // MEMO: remix-auth側でrequestを使用しているため、ここでcloneする
   const cloneRequest = request.clone();
   const formDataObj = Object.fromEntries(await cloneRequest.formData());
@@ -28,7 +28,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const result = await createUser(validationResult.data);
   if (result?.error) {
-    return jsonWithError(null, result.error);
+    return dataWithError(null, result.error);
   }
 
   return await authenticator.authenticate(AUTH_STRATEGY_NAME, request, {
@@ -36,8 +36,7 @@ export async function action({ request }: ActionFunctionArgs) {
   });
 }
 
-export default function Register() {
-  const actionData = useActionData<typeof action>();
+export default function Register({ actionData }: Route.ComponentProps) {
   const validationMessages = actionData?.validationErrors;
 
   return (

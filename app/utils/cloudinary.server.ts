@@ -1,5 +1,5 @@
 import type { UploadApiResponse, UploadStream } from "cloudinary";
-import { writeAsyncIterableToWritable } from "@remix-run/node";
+import { writeAsyncIterableToWritable } from "@react-router/node";
 import cloudinary from "cloudinary";
 
 cloudinary.v2.config({

@@ -1,4 +1,4 @@
-import { createCookieSessionStorage } from "@remix-run/node";
+import { createCookieSessionStorage } from "react-router";
 import invariant from "tiny-invariant";
 
 invariant(process.env.SESSION_SECRET, "SESSION_SECRETを設定してください。");

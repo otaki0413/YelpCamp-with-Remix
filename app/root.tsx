@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs } from "@remix-run/node";
+import type { LoaderFunctionArgs } from "react-router";
 import {
   isRouteErrorResponse,
   useRouteError,
@@ -11,7 +11,7 @@ import {
   ScrollRestoration,
   useLoaderData,
   data,
-} from "@remix-run/react";
+} from "react-router";
 import { useEffect } from "react";
 import { getToast } from "remix-toast";
 import { toast as notify } from "sonner";

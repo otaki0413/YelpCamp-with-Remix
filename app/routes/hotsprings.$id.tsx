@@ -1,14 +1,7 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import type { Params } from "@remix-run/react";
+import type { Params } from "react-router";
+import { Form, Link, useNavigation } from "react-router";
 import {
-  Form,
-  Link,
-  useActionData,
-  useLoaderData,
-  useNavigation,
-} from "@remix-run/react";
-import {
-  jsonWithSuccess,
+  dataWithSuccess,
   redirectWithError,
   redirectWithSuccess,
 } from "remix-toast";
@@ -54,6 +47,7 @@ import {
 } from "~/components/ui/alert-dialog";
 import { deleteImageById } from "~/utils/cloudinary.server";
 import { useEffect, useRef, useState } from "react";
+import type { Route } from ".react-router/types/app/routes/+types/hotsprings.$id";
 
 const INTENTS = {
   deleteHotSpringIntent: "deleteHotSpring" as const,
@@ -61,7 +55,7 @@ const INTENTS = {
   deleteReviewIntent: "deleteReview" as const,
 };
 
-export const loader = async ({ request, params }: LoaderFunctionArgs) => {
+export const loader = async ({ request, params }: Route.LoaderArgs) => {
   const currentUser = await authenticator.isAuthenticated(request);
 
   const hotSpringId = params.id;
@@ -77,7 +71,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   return { hotSpring, currentUser, reviews };
 };
 
-export const action = async ({ request, params }: ActionFunctionArgs) => {
+export const action = async ({ request, params }: Route.ActionArgs) => {
   // 認証されていない場合はnullが返されるので、ログインページへリダイレクト
   const user = await authenticator.isAuthenticated(request);
   if (user === null) {
@@ -103,13 +97,15 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   }
 };
 
-export default function HotSpringRoute() {
+export default function HotSpringRoute({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
   const [rating, setRating] = useState(0);
   const $form = useRef<HTMLFormElement>(null);
   const navigation = useNavigation();
 
-  const { hotSpring, currentUser, reviews } = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
+  const { hotSpring, currentUser, reviews } = loaderData;
   const validationMessages = actionData?.validationErrors;
 
   useEffect(
@@ -348,7 +344,7 @@ async function createReviewAction({
     hotSpringId,
   });
 
-  return jsonWithSuccess(null, "レビューが投稿されました！🎉");
+  return dataWithSuccess(null, "レビューが投稿されました！🎉");
 }
 
 // レビュー削除用のaction関数
@@ -359,5 +355,5 @@ async function deleteReviewAction({ request }: { request: Request }) {
 
   await deleteReview(reviewId);
 
-  return jsonWithSuccess(null, "レビューが削除されました！🔥");
+  return dataWithSuccess(null, "レビューが削除されました！🔥");
 }

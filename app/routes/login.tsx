@@ -1,5 +1,4 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Form, useActionData } from "@remix-run/react";
+import { Form } from "react-router";
 import { AuthorizationError } from "remix-auth";
 import { redirectWithError } from "remix-toast";
 import { Button } from "~/components/ui/button";
@@ -10,14 +9,15 @@ import {
   AuthSchema,
   authenticator,
 } from "~/services/auth.server";
+import type { Route } from ".react-router/types/app/routes/+types/login";
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+export const loader = async ({ request }: Route.LoaderArgs) => {
   return await authenticator.isAuthenticated(request, {
     successRedirect: "/hotsprings",
   });
 };
 
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request }: Route.ActionArgs) => {
   const cloneRequest = request.clone();
   const formDataObj = Object.fromEntries(await cloneRequest.formData());
 
@@ -46,8 +46,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 };
 
-export default function Login() {
-  const actionData = useActionData<typeof action>();
+export default function Login({ actionData }: Route.ComponentProps) {
   const validationMessages = actionData?.validationErrors;
 
   return (
