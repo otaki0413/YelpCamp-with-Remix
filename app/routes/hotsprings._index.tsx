@@ -1,5 +1,4 @@
-import type { LoaderFunctionArgs } from "@remix-run/node";
-import { Link, json, useLoaderData } from "@remix-run/react";
+import { Link, useLoaderData } from "@remix-run/react";
 import { Rating } from "@smastrom/react-rating";
 import { MessageCircleMore } from "lucide-react";
 import { Button } from "~/components/ui/button";
@@ -25,7 +24,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }),
   );
 
-  return json({ hotSprings: hotSpringsWithAvg });
+  return { hotSprings: hotSpringsWithAvg };
 };
 
 export default function HotSpringsIndexRoute() {

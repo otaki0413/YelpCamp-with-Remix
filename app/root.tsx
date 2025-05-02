@@ -10,7 +10,7 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
-  json,
+  data,
 } from "@remix-run/react";
 import { useEffect } from "react";
 import { getToast } from "remix-toast";
@@ -23,7 +23,7 @@ import "@smastrom/react-rating/style.css";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const user = await authenticator.isAuthenticated(request);
   const { toast, headers } = await getToast(request);
-  return json({ user, toast }, { headers });
+  return data({ user, toast }, { headers });
 };
 
 export default function App() {

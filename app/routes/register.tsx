@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Form, json, useActionData } from "@remix-run/react";
+import { Form, useActionData } from "@remix-run/react";
 import { jsonWithError } from "remix-toast";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -20,10 +20,10 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const validationResult = CreateUserSchema.safeParse(formDataObj);
   if (!validationResult.success) {
-    return json({
+    return {
       error: null,
       validationErrors: validationResult.error.flatten().fieldErrors,
-    });
+    };
   }
 
   const result = await createUser(validationResult.data);

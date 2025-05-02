@@ -3,7 +3,6 @@ import type { Params } from "@remix-run/react";
 import {
   Form,
   Link,
-  json,
   useActionData,
   useLoaderData,
   useNavigation,
@@ -75,7 +74,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
   const reviews = await getReviewsByHotSpringId(hotSpring.id);
 
-  return json({ hotSpring, currentUser, reviews });
+  return { hotSpring, currentUser, reviews };
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
@@ -337,9 +336,9 @@ async function createReviewAction({
   const validationResult = CreateReviewSchema.safeParse(formDataObj);
   if (!validationResult.success) {
     console.log(validationResult.error.flatten());
-    return json({
+    return {
       validationErrors: validationResult.error.flatten().fieldErrors,
-    });
+    };
   }
 
   await createReview({

@@ -8,13 +8,7 @@ import {
   unstable_composeUploadHandlers as composeUploadHandlers,
   unstable_createMemoryUploadHandler as createMemoryUploadHandler,
 } from "@remix-run/node";
-import {
-  Form,
-  Link,
-  json,
-  useActionData,
-  useLoaderData,
-} from "@remix-run/react";
+import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import { redirectWithError, redirectWithSuccess } from "remix-toast";
 import invariant from "tiny-invariant";
 import { Button } from "~/components/ui/button";
@@ -57,7 +51,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     );
   }
 
-  return json({ hotSpring });
+  return { hotSpring };
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
@@ -75,9 +69,9 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   let validationResult;
   validationResult = HotSpringSchema.safeParse(formDataObj);
   if (!validationResult.success) {
-    return json({
+    return {
       validationErrors: validationResult.error.flatten().fieldErrors,
-    });
+    };
   }
 
   const imageData = formData.get("image");
@@ -111,9 +105,9 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
     validationResult = CreateHotSpringSchema.safeParse(formDataObj);
     if (!validationResult.success) {
-      return json({
+      return {
         validationErrors: validationResult.error.flatten().fieldErrors,
-      });
+      };
     }
   }
 

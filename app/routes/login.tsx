@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Form, json, useActionData } from "@remix-run/react";
+import { Form, useActionData } from "@remix-run/react";
 import { AuthorizationError } from "remix-auth";
 import { redirectWithError } from "remix-toast";
 import { Button } from "~/components/ui/button";
@@ -23,10 +23,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   const validationResult = AuthSchema.safeParse(formDataObj);
   if (!validationResult.success) {
-    return json({
+    return {
       error: null,
       validationErrors: validationResult.error.flatten().fieldErrors,
-    });
+    };
   }
 
   try {
