@@ -1,11 +1,10 @@
-import type { LoaderFunctionArgs, LinksFunction } from "@remix-run/node";
+import type { LoaderFunctionArgs } from "@remix-run/node";
 import {
   isRouteErrorResponse,
   useRouteError,
   Form,
   Link,
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
@@ -18,13 +17,8 @@ import { getToast } from "remix-toast";
 import { toast as notify } from "sonner";
 import { Toaster } from "~/components/ui/sonner";
 import { authenticator } from "~/services/auth.server";
-import cssStyles from "@smastrom/react-rating/style.css";
-import tailwindStyles from "./tailwind.css";
-
-export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: tailwindStyles },
-  { rel: "stylesheet", href: cssStyles },
-];
+import "./tailwind.css";
+import "@smastrom/react-rating/style.css";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const user = await authenticator.isAuthenticated(request);
@@ -162,7 +156,6 @@ function Document({
         <Toaster position="top-center" />
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );
