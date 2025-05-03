@@ -1,6 +1,4 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Form, json, useActionData } from "@remix-run/react";
-import { AuthorizationError } from "remix-auth";
+import { Form, redirect } from "react-router";
 import { redirectWithError } from "remix-toast";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -10,35 +8,48 @@ import {
   AuthSchema,
   authenticator,
 } from "~/services/auth.server";
+import {
+  commitSession,
+  getSession,
+  getSessionUser,
+  SESSION_KEY,
+} from "~/services/session.server";
+import type { Route } from ".react-router/types/app/routes/+types/login";
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  return await authenticator.isAuthenticated(request, {
-    successRedirect: "/hotsprings",
-  });
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const user = await getSessionUser(request);
+  if (user) {
+    return redirect("/hotsprings");
+  }
+  return null;
 };
 
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request }: Route.ActionArgs) => {
+  // フォームデータのバリデーション
   const cloneRequest = request.clone();
   const formDataObj = Object.fromEntries(await cloneRequest.formData());
-
   const validationResult = AuthSchema.safeParse(formDataObj);
   if (!validationResult.success) {
-    return json({
+    return {
       error: null,
       validationErrors: validationResult.error.flatten().fieldErrors,
-    });
+    };
   }
 
+  // 認証処理
   try {
-    // 認証失敗時のリダイレクト先を指定しないことで、nullを返さず意図的にAuthorizationErrorを出す
-    return await authenticator.authenticate(AUTH_STRATEGY_NAME, request, {
-      successRedirect: "/hotsprings",
-      throwOnError: true,
+    const user = await authenticator.authenticate(AUTH_STRATEGY_NAME, request);
+    const session = await getSession(request.headers.get("cookie"));
+    session.set(SESSION_KEY, user);
+    return redirect("/hotsprings", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
     });
   } catch (error) {
     // 認証成功時には、Responseのerrorを返すことで正常なリダイレクトを行う
     if (error instanceof Response) return error;
-    if (error instanceof AuthorizationError) {
+    if (error instanceof Error) {
       return redirectWithError("/login", error.message);
     }
     console.log(error);
@@ -46,8 +57,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 };
 
-export default function Login() {
-  const actionData = useActionData<typeof action>();
+export default function Login({ actionData }: Route.ComponentProps) {
   const validationMessages = actionData?.validationErrors;
 
   return (

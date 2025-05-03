@@ -1,15 +1,8 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import type { Params } from "@remix-run/react";
+import { useEffect, useRef, useState } from "react";
+import type { Params } from "react-router";
+import { Form, Link, useNavigation } from "react-router";
 import {
-  Form,
-  Link,
-  json,
-  useActionData,
-  useLoaderData,
-  useNavigation,
-} from "@remix-run/react";
-import {
-  jsonWithSuccess,
+  dataWithSuccess,
   redirectWithError,
   redirectWithSuccess,
 } from "remix-toast";
@@ -29,7 +22,6 @@ import {
 import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
 import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
-import { authenticator } from "~/services/auth.server";
 import {
   getHotSpring,
   getPublicIds,
@@ -54,7 +46,8 @@ import {
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
 import { deleteImageById } from "~/utils/cloudinary.server";
-import { useEffect, useRef, useState } from "react";
+import { getSessionUser } from "~/services/session.server";
+import type { Route } from ".react-router/types/app/routes/+types/hotsprings.$id";
 
 const INTENTS = {
   deleteHotSpringIntent: "deleteHotSpring" as const,
@@ -62,8 +55,11 @@ const INTENTS = {
   deleteReviewIntent: "deleteReview" as const,
 };
 
-export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  const currentUser = await authenticator.isAuthenticated(request);
+export const loader = async ({ request, params }: Route.LoaderArgs) => {
+  const user = await getSessionUser(request);
+  if (!user) {
+    return redirectWithError("/login", "ログインが必要なルートです！🚧");
+  }
 
   const hotSpringId = params.id;
   invariant(hotSpringId, "Invalid params");
@@ -75,13 +71,12 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
   const reviews = await getReviewsByHotSpringId(hotSpring.id);
 
-  return json({ hotSpring, currentUser, reviews });
+  return { hotSpring, user, reviews };
 };
 
-export const action = async ({ request, params }: ActionFunctionArgs) => {
-  // 認証されていない場合はnullが返されるので、ログインページへリダイレクト
-  const user = await authenticator.isAuthenticated(request);
-  if (user === null) {
+export const action = async ({ request, params }: Route.ActionArgs) => {
+  const user = await getSessionUser(request);
+  if (!user) {
     return redirectWithError("/login", "ログインが必要な操作です！🚧");
   }
 
@@ -104,13 +99,15 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   }
 };
 
-export default function HotSpringRoute() {
+export default function HotSpringRoute({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
   const [rating, setRating] = useState(0);
   const $form = useRef<HTMLFormElement>(null);
   const navigation = useNavigation();
 
-  const { hotSpring, currentUser, reviews } = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
+  const { hotSpring, user, reviews } = loaderData;
   const validationMessages = actionData?.validationErrors;
 
   useEffect(
@@ -173,7 +170,7 @@ export default function HotSpringRoute() {
                 {format(hotSpring.updatedAt, "yyyy年MM月dd日 HH時MM分")}
               </div>
               {/* ログインユーザーとレビュアーが一致している場合、編集・削除ボタン表示 */}
-              {hotSpring.Author.id === currentUser?.id && (
+              {hotSpring.Author.id === user?.id && (
                 <div className="flex gap-2">
                   <Link to="edit">
                     <Button variant="outline">編集</Button>
@@ -267,7 +264,7 @@ export default function HotSpringRoute() {
                           {review.Reviewer.username}
                         </div>
                         {/* ログインユーザーとレビュアーが一致している場合、削除ボタン表示 */}
-                        {currentUser?.id === review.reviewerId && (
+                        {user.id === review.reviewerId && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -337,9 +334,9 @@ async function createReviewAction({
   const validationResult = CreateReviewSchema.safeParse(formDataObj);
   if (!validationResult.success) {
     console.log(validationResult.error.flatten());
-    return json({
+    return {
       validationErrors: validationResult.error.flatten().fieldErrors,
-    });
+    };
   }
 
   await createReview({
@@ -349,7 +346,7 @@ async function createReviewAction({
     hotSpringId,
   });
 
-  return jsonWithSuccess(null, "レビューが投稿されました！🎉");
+  return dataWithSuccess(null, "レビューが投稿されました！🎉");
 }
 
 // レビュー削除用のaction関数
@@ -360,5 +357,5 @@ async function deleteReviewAction({ request }: { request: Request }) {
 
   await deleteReview(reviewId);
 
-  return jsonWithSuccess(null, "レビューが削除されました！🔥");
+  return dataWithSuccess(null, "レビューが削除されました！🔥");
 }

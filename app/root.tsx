@@ -1,52 +1,52 @@
-import type { LoaderFunctionArgs, LinksFunction } from "@remix-run/node";
 import {
   isRouteErrorResponse,
   useRouteError,
   Form,
   Link,
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLoaderData,
-  json,
-} from "@remix-run/react";
+  data,
+} from "react-router";
 import { useEffect } from "react";
 import { getToast } from "remix-toast";
 import { toast as notify } from "sonner";
 import { Toaster } from "~/components/ui/sonner";
-import { authenticator } from "~/services/auth.server";
-import cssStyles from "@smastrom/react-rating/style.css";
-import tailwindStyles from "./tailwind.css";
+import { AUTH_STRATEGY_NAME, authenticator } from "~/services/auth.server";
+import "./tailwind.css";
+import "@smastrom/react-rating/style.css";
+import { Route } from ".react-router/types/app/+types/root";
 
-export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: tailwindStyles },
-  { rel: "stylesheet", href: cssStyles },
-];
-
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const user = await authenticator.isAuthenticated(request);
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  // TODO: セッションからユーザー情報を取得したいが、ルートからのセッションの取得方法がわからない
   const { toast, headers } = await getToast(request);
-  return json({ user, toast }, { headers });
+  return data({ toast }, { headers });
 };
 
-export default function App() {
-  const { user, toast } = useLoaderData<typeof loader>();
+export default function App({ loaderData }: Route.ComponentProps) {
+  const { toast } = loaderData;
+
+  const links = [
+    { text: "ホーム", to: "/" },
+    { text: "温泉リスト", to: "/hotsprings" },
+    { text: "新規登録", to: "/register" },
+    { text: "ログイン", to: "/login" },
+  ];
 
   // セッション有無に応じてヘッダーのリンクを切り替える
-  const links = user
-    ? [
-        { text: "ホーム", to: "/" },
-        { text: "温泉リスト", to: "/hotsprings" },
-      ]
-    : [
-        { text: "ホーム", to: "/" },
-        { text: "温泉リスト", to: "/hotsprings" },
-        { text: "新規登録", to: "/register" },
-        { text: "ログイン", to: "/login" },
-      ];
+  // const links = user
+  //   ? [
+  //       { text: "ホーム", to: "/" },
+  //       { text: "温泉リスト", to: "/hotsprings" },
+  //     ]
+  //   : [
+  //       { text: "ホーム", to: "/" },
+  //       { text: "温泉リスト", to: "/hotsprings" },
+  //       { text: "新規登録", to: "/register" },
+  //       { text: "ログイン", to: "/login" },
+  //     ];
 
   useEffect(() => {
     if (toast?.type === "error") {
@@ -79,13 +79,11 @@ export default function App() {
                   </Link>
                 ))}
                 {/* セッションが存在する場合、ログアウトボタン表示 */}
-                {user && (
-                  <Form action="/logout" method="post">
-                    <button className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white">
-                      ログアウト
-                    </button>
-                  </Form>
-                )}
+                <Form action="/logout" method="post">
+                  <button className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white">
+                    ログアウト
+                  </button>
+                </Form>
               </div>
             </div>
           </nav>
@@ -162,7 +160,6 @@ function Document({
         <Toaster position="top-center" />
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );

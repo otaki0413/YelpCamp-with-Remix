@@ -1,5 +1,4 @@
-import type { LoaderFunctionArgs } from "@remix-run/node";
-import { Link, json, useLoaderData } from "@remix-run/react";
+import { Link } from "react-router";
 import { Rating } from "@smastrom/react-rating";
 import { MessageCircleMore } from "lucide-react";
 import { Button } from "~/components/ui/button";
@@ -12,8 +11,9 @@ import {
 } from "~/components/ui/card";
 import { getHotSprings } from "~/models/hotspring.server";
 import { getRatingAvg } from "~/models/review.server";
+import type { Route } from ".react-router/types/app/routes/+types/hotsprings._index";
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+export const loader = async ({ request }: Route.LoaderArgs) => {
   const hotSprings = await getHotSprings();
   const hotSpringsWithAvg = await Promise.all(
     hotSprings.map(async (hotSpring) => {
@@ -25,11 +25,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }),
   );
 
-  return json({ hotSprings: hotSpringsWithAvg });
+  return { hotSprings: hotSpringsWithAvg };
 };
 
-export default function HotSpringsIndexRoute() {
-  const { hotSprings } = useLoaderData<typeof loader>();
+export default function HotSpringsIndexRoute({
+  loaderData,
+}: Route.ComponentProps) {
+  const { hotSprings } = loaderData;
 
   return (
     <div className="w-full px-8 py-8 sm:px-20">
