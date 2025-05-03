@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import type { Params } from "react-router";
 import { Form, Link, useNavigation } from "react-router";
 import {
@@ -21,7 +22,6 @@ import {
 import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
 import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
-import { authenticator } from "~/services/auth.server";
 import {
   getHotSpring,
   getPublicIds,
@@ -46,7 +46,7 @@ import {
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
 import { deleteImageById } from "~/utils/cloudinary.server";
-import { useEffect, useRef, useState } from "react";
+import { getSessionUser } from "~/services/session.server";
 import type { Route } from ".react-router/types/app/routes/+types/hotsprings.$id";
 
 const INTENTS = {
@@ -56,7 +56,10 @@ const INTENTS = {
 };
 
 export const loader = async ({ request, params }: Route.LoaderArgs) => {
-  const currentUser = await authenticator.isAuthenticated(request);
+  const user = await getSessionUser(request);
+  if (!user) {
+    return redirectWithError("/login", "ログインが必要なルートです！🚧");
+  }
 
   const hotSpringId = params.id;
   invariant(hotSpringId, "Invalid params");
@@ -68,13 +71,12 @@ export const loader = async ({ request, params }: Route.LoaderArgs) => {
 
   const reviews = await getReviewsByHotSpringId(hotSpring.id);
 
-  return { hotSpring, currentUser, reviews };
+  return { hotSpring, user, reviews };
 };
 
 export const action = async ({ request, params }: Route.ActionArgs) => {
-  // 認証されていない場合はnullが返されるので、ログインページへリダイレクト
-  const user = await authenticator.isAuthenticated(request);
-  if (user === null) {
+  const user = await getSessionUser(request);
+  if (!user) {
     return redirectWithError("/login", "ログインが必要な操作です！🚧");
   }
 
@@ -105,7 +107,7 @@ export default function HotSpringRoute({
   const $form = useRef<HTMLFormElement>(null);
   const navigation = useNavigation();
 
-  const { hotSpring, currentUser, reviews } = loaderData;
+  const { hotSpring, user, reviews } = loaderData;
   const validationMessages = actionData?.validationErrors;
 
   useEffect(
@@ -168,7 +170,7 @@ export default function HotSpringRoute({
                 {format(hotSpring.updatedAt, "yyyy年MM月dd日 HH時MM分")}
               </div>
               {/* ログインユーザーとレビュアーが一致している場合、編集・削除ボタン表示 */}
-              {hotSpring.Author.id === currentUser?.id && (
+              {hotSpring.Author.id === user?.id && (
                 <div className="flex gap-2">
                   <Link to="edit">
                     <Button variant="outline">編集</Button>
@@ -262,7 +264,7 @@ export default function HotSpringRoute({
                           {review.Reviewer.username}
                         </div>
                         {/* ログインユーザーとレビュアーが一致している場合、削除ボタン表示 */}
-                        {currentUser?.id === review.reviewerId && (
+                        {user.id === review.reviewerId && (
                           <Button
                             variant="ghost"
                             size="icon"
